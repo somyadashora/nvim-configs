@@ -16,6 +16,10 @@ opt.wrap = false
 -- spell check
 opt.spelllang = 'en_us'
 opt.spell = true
+-- :spellr
+-- if there’s a word you frequently misspell, using :spellr
+-- is a quick and easy one stop shop for fixing all the misspellings of that type.
+
 
 -- search settings
 opt.ignorecase = true -- ignore case when searching
