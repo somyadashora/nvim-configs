@@ -24,13 +24,13 @@ return {
         }
       }
     }
-    
+
     local keymap = vim.keymap
 
     keymap.set("n", "<leader>bg", "<cmd>BufferLinePick<cr>", {desc = "Naviation to open buffer using mapped keys"})
     keymap.set("n", "<leader>bn", "<cmd>BufferLineCycleNext<cr>", {desc = "Naviation to Next buffer in bufferlist"})
     keymap.set("n", "<leader>bp", "<cmd>BufferLineCyclePrev<cr>", {desc = "Naviation to prev buffer in bufferlist"})
-    
+
     keymap.set("n", "<leader>bcr", "<cmd>BufferLineCloseRight<cr>", {desc = "Close all buffers to the Right of current buffer"})
     keymap.set("n", "<leader>bcl", "<cmd>BufferLineCloseLeft<cr>", {desc = "Close all buffers to the Left of current buffer"})
     keymap.set("n", "<leader>bco", "<cmd>BufferLineCloseOthers<cr>", {desc = "Close all other buffers"})
