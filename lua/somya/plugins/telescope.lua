@@ -35,7 +35,7 @@ return {
     keymap.set("n", "<leader>fc", "<cmd>Telescope grep_string<cr>", { desc = "Find string under cursor in cwd" })
     keymap.set("n", "<leader>fB", "<cmd>Telescope buffers<cr>", { desc = "Find buffers in bufferlist" })
     keymap.set("n", "<leader>fR", "<cmd>Telescope registers<cr>", { desc = "Find registers in registerlist" })
-    keymap.set("n", "<leader>fJ", "<cmd>Telescope jumplist<cr>", { desc = "Find registers in registerlist" })
-    keymap.set("n", "<leader>fM", "<cmd>Telescope marks<cr>", { desc = "Find registers in registerlist" })
+    keymap.set("n", "<leader>fJ", "<cmd>Telescope jumplist<cr>", { desc = "Find jumps in jumplist" })
+    keymap.set("n", "<leader>fM", "<cmd>Telescope marks<cr>", { desc = "Find marks in marklist" })
   end,
 }
