@@ -30,16 +30,15 @@ return {
     local keymap = vim.keymap -- for conciseness
 
     keymap.set("n", "<leader>ff", "<cmd>Telescope find_files<cr>", { desc = "Fuzzy find files in cwd" })
-    keymap.set("n", "<leader>fFi", "<cmd>Telescope find_files no_ignore=true<cr>", { desc = "Fuzzy find files in cwd, don't respect gitignore" })
-    keymap.set("n", "<leader>fFh", "<cmd>Telescope find_files hidden=true<cr>", { desc = "Fuzzy find files in cwd, hidden files too" })
+    keymap.set("n", "<leader>fFi", "<cmd>Telescope find_files no_ignore=true hidden=true<cr>", { desc = "Fuzzy find files in cwd, don't respect gitignore" })
 
     keymap.set("n", "<leader>fr", "<cmd>Telescope oldfiles<cr>", { desc = "Fuzzy find recent files" })
 
     keymap.set("n", "<leader>fs", "<cmd>Telescope live_grep<cr>", { desc = "Find string in cwd" })
-    keymap.set("n", "<leader>fSi", "<cmd>Telescope live_grep no_ignore=true<cr>", { desc = "Find string in cwd, don't respect gitignore" })
-    keymap.set("n", "<leader>fSh", "<cmd>Telescope live_grep hidden=true<cr>", { desc = "Find string in cwd, hidden files too" })
+    keymap.set("n", "<leader>fSi", "<cmd>Telescope live_grep no_ignore=true hidden=true<cr>", { desc = "Find string in cwd, don't respect gitignore" })
 
     keymap.set("n", "<leader>fc", "<cmd>Telescope grep_string<cr>", { desc = "Find string under cursor in cwd" })
+
     keymap.set("n", "<leader>fB", "<cmd>Telescope buffers<cr>", { desc = "Find buffers in bufferlist" })
     keymap.set("n", "<leader>fR", "<cmd>Telescope registers<cr>", { desc = "Find registers in registerlist" })
     keymap.set("n", "<leader>fJ", "<cmd>Telescope jumplist<cr>", { desc = "Find jumps in jumplist" })
