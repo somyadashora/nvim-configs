@@ -15,7 +15,7 @@ opt.wrap = false
 
 -- spell check
 opt.spelllang = 'en_us'
-opt.spell = true
+opt.spell = false
 -- :spellr
 -- if there’s a word you frequently misspell, using :spellr
 -- is a quick and easy one stop shop for fixing all the misspellings of that type.
@@ -27,6 +27,7 @@ opt.smartcase = true -- if you include mixed case in your search, assumes you wa
 
 -- cursor line
 opt.cursorline = true
+opt.cursorlineopt ='number'
 
 -- appearance
 
