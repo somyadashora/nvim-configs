@@ -43,6 +43,7 @@ return {
     keymap.set("n", "<leader>fR", "<cmd>Telescope registers<cr>", { desc = "Find registers in registerlist" })
     keymap.set("n", "<leader>fJ", "<cmd>Telescope jumplist<cr>", { desc = "Find jumps in jumplist" })
     keymap.set("n", "<leader>fM", "<cmd>Telescope marks<cr>", { desc = "Find marks in marklist" })
+    keymap.set("n", "<leader>fT", "<cmd>TodoTelescope<cr>", { desc = "Find Todo's" })
     keymap.set("n", "<leader>fib", "<cmd>Telescope current_buffer_fuzzy_find<cr>", { desc = "Find string fuzzily in current buffer" })
   end,
 }
