@@ -88,7 +88,7 @@ return {
       ["verible"] = function()
         lspconfig["verible"].setup({
         capabilities = capabilities,
-        cmd = {'verible-verilog-ls', '--rules_config_search', '--verilog_trace_parser'},
+        cmd = {'verible-verilog-ls', '--rules_config_search'},
       })
       end,
       ["lua_ls"] = function()
