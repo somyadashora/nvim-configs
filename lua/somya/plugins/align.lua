@@ -13,6 +13,8 @@ return {
         keymap.set("x", "<leader>As", function()require'align'.align_to_string({ preview = true, regex = false }) end, NS) -- Aligns to a string with previews
         keymap.set("x", "<leader>Ar", function()require'align'.align_to_string({ preview = true, regex = true }) end, NS) -- Aligns to a vim regex with previews
 
+        keymap.set("x", "<leader>AR", function()require'align'.align_to_string({ preview = false, regex = true }) end, NS) -- Aligns to a vim regex without previews
+
         keymap.set("n", "<leader>Ap", function() local a = require'align' a.operator( a.align_to_string, { regex = false, preview = true, }) end, NS) --to align a paragraph to a string with previews
     end
 }
