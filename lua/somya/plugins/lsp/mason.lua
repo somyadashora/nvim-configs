@@ -28,7 +28,7 @@ return {
         "lua_ls",
       },
       PATH = "prepend",
-      -- v2.0.0+: automatically enable installed servers
+      -- automatically enable installed servers (required for vim.lsp.config() API)
       automatic_enable = true,
     })
   end,

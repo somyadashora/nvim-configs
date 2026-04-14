@@ -7,9 +7,6 @@ return {
     { "folke/neodev.nvim", opts = {} },
   },
   config = function()
-    -- import lspconfig plugin
-    local lspconfig = require("lspconfig")
-
     -- import mason_lspconfig plugin
     local mason_lspconfig = require("mason-lspconfig")
 
@@ -78,17 +75,17 @@ return {
       vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
     end
 
-    -- v2.0.0+: configure servers directly (setup_handlers was removed)
+    -- nvim-lspconfig 0.11+: use vim.lsp.config() API instead of deprecated require('lspconfig') framework
     -- automatic_enable in mason.lua will handle default setup for installed servers
 
     -- configure verible server with custom settings
-    lspconfig["verible"].setup({
+    vim.lsp.config("verible", {
       capabilities = capabilities,
       cmd = { "verible-verilog-ls", "--rules_config_search" },
     })
 
     -- configure lua server with special settings
-    lspconfig["lua_ls"].setup({
+    vim.lsp.config("lua_ls", {
       capabilities = capabilities,
       settings = {
         Lua = {
