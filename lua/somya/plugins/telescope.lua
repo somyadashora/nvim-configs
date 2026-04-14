@@ -14,8 +14,8 @@ return {
       defaults = {
         path_display = { "smart" },
         preview = {
-          -- disable tree-sitter highlighting in preview (compatibility issue with ft_to_lang)
-          treesitter = false,
+          -- enable/disable tree-sitter highlighting in preview (compatibility issue with ft_to_lang. currently enabled)
+          treesitter = true,
         },
         mappings = {
           i = {
