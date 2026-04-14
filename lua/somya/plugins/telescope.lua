@@ -1,20 +1,12 @@
 return {
   "nvim-telescope/telescope.nvim",
-  branch = "0.1.x",
   dependencies = {
     "nvim-lua/plenary.nvim",
     { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
     "nvim-tree/nvim-web-devicons",
     "folke/todo-comments.nvim",
-    "nvim-treesitter/nvim-treesitter",  -- explicit dependency for tree-sitter integration
   },
   config = function()
-    -- Ensure nvim-treesitter is loaded for preview highlighting
-    local ok, treesitter = pcall(require, "nvim-treesitter")
-    if not ok then
-      vim.notify("nvim-treesitter not found, preview highlighting may not work", vim.log.levels.WARN)
-    end
-
     local telescope = require("telescope")
     local actions = require("telescope.actions")
 
@@ -22,8 +14,8 @@ return {
       defaults = {
         path_display = { "smart" },
         preview = {
-          -- disable tree-sitter highlighting in preview if issues occur
-          treesitter = true,
+          -- disable tree-sitter highlighting in preview (compatibility issue with ft_to_lang)
+          treesitter = false,
         },
         mappings = {
           i = {
