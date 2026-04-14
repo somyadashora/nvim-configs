@@ -28,6 +28,8 @@ return {
         "lua_ls",
       },
       PATH = "prepend",
+      -- v2.0.0+: automatically enable installed servers
+      automatic_enable = true,
     })
   end,
 }

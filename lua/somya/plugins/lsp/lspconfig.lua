@@ -78,36 +78,29 @@ return {
       vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
     end
 
-    mason_lspconfig.setup_handlers({
-      -- default handler for installed servers
-      function(server_name)
-        lspconfig[server_name].setup({
-          capabilities = capabilities,
-        })
-      end,
-      ["verible"] = function()
-        lspconfig["verible"].setup({
-        capabilities = capabilities,
-        cmd = {'verible-verilog-ls', '--rules_config_search'},
-      })
-      end,
-      ["lua_ls"] = function()
-        -- configure lua server (with special settings)
-        lspconfig["lua_ls"].setup({
-          capabilities = capabilities,
-          settings = {
-            Lua = {
-              -- make the language server recognize "vim" global
-              diagnostics = {
-                globals = { "vim" },
-              },
-              completion = {
-                callSnippet = "Replace",
-              },
-            },
+    -- v2.0.0+: configure servers directly (setup_handlers was removed)
+    -- automatic_enable in mason.lua will handle default setup for installed servers
+
+    -- configure verible server with custom settings
+    lspconfig["verible"].setup({
+      capabilities = capabilities,
+      cmd = { "verible-verilog-ls", "--rules_config_search" },
+    })
+
+    -- configure lua server with special settings
+    lspconfig["lua_ls"].setup({
+      capabilities = capabilities,
+      settings = {
+        Lua = {
+          -- make the language server recognize "vim" global
+          diagnostics = {
+            globals = { "vim" },
           },
-        })
-      end,
+          completion = {
+            callSnippet = "Replace",
+          },
+        },
+      },
     })
   end,
 }
