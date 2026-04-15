@@ -14,7 +14,7 @@ return {
       highlight = {
         enable = true,
         -- List languages you want to disable here (e.g., "python", "c")
-        disable = { "python" }, 
+        -- disable = { "python" }, 
       },
       -- enable indentation
       indent = { enable = true },
