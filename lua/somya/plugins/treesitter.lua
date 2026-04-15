@@ -13,6 +13,8 @@ return {
     treesitter.setup({ -- enable syntax highlighting
       highlight = {
         enable = true,
+        -- List languages you want to disable here (e.g., "python", "c")
+        disable = { "python" }, 
       },
       -- enable indentation
       indent = { enable = true },
