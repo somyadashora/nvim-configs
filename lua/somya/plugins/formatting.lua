@@ -16,6 +16,13 @@ return {
 				lua = { "stylua" },
 				python = { "isort", "black" },
 			},
+			formatters = {
+				verible = {
+					command = "verible-verilog-format",
+					args = { "--aligning_spaces=2" },
+					stdin = true,
+				},
+			},
 			--     format_on_save = {
 			--       lsp_fallback = true,
 			--       async = false,
@@ -23,6 +30,7 @@ return {
 			--     },
 		})
 
+		-- General format keybinding (works with visual selection or whole file)
 		vim.keymap.set({ "n", "v" }, "<leader>mp", function()
 			conform.format({
 				lsp_fallback = true,
@@ -30,5 +38,15 @@ return {
 				timeout_ms = 1000,
 			})
 		end, { desc = "Format file or range (in visual mode)" })
+
+		-- Dedicated Verible format and align keybinding
+		vim.keymap.set({ "n", "v" }, "<leader>vf", function()
+			conform.format({
+				formatters = { "verible" },
+				lsp_fallback = false,
+				async = false,
+				timeout_ms = 1000,
+			})
+		end, { desc = "Format and align with Verible" })
 	end,
 }
