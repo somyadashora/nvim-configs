@@ -1,20 +1,21 @@
 return {
   "folke/todo-comments.nvim",
   dependencies = { "nvim-lua/plenary.nvim" },
-  opts = {
-    keywords = {
-      FIXME = {
-        color = "error",
-        alt = { "FIX" },
+  config = function()
+    require("todo-comments").setup({
+      keywords = {
+        FIXME = {
+          color = "error",
+          alt = { "FIX" },
+        },
+        TODO = { color = "info" },
+        REVIEW = { color = "warning", alt = { "WARNING" } },
+        PERF = { alt = { "IMPORTANT" } },
+        SPEC = { alt = { "SPECIFICATION" } },
+        NOTE = { color = "hint", alt = { "INFO" } },
       },
-      TODO = { color = "info" },
-      REVIEW = { color = "warning", alt = { "WARNING" } },
-      PERF = { alt = { "IMPORTANT" } },
-      SPEC = { alt = { "SPECIFICATION" } },
-      NOTE = { color = "hint", alt = { "INFO" } },
-    },
-  },
-  init = function()
+    })
+
     local keymap = vim.keymap
     keymap.set("n", "]t", function()
       require("todo-comments").jump_next()
