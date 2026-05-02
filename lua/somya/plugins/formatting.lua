@@ -19,7 +19,13 @@ return {
 			formatters = {
 				verible = {
 					command = "verible-verilog-format",
-					args = { "--aligning_spaces=2" },
+					args = {
+						"--indentation_spaces=2",
+						"--column_limit=100",
+						"--assignment_statement_alignment=align",
+						"--module_net_variable_alignment=align",
+						"-",
+					},
 					stdin = true,
 				},
 			},
