@@ -1,5 +1,4 @@
 
-
 # echo "Sourcing sdashora's bashrc"
 # export DOTFILES_DIR="${HOME}/.somyadashora/sd-dotfiles"
 # source "${DOTFILES_DIR}/bash/.bash_rc"
@@ -10,11 +9,13 @@
 
 # Setup fzf
 # ---------
-if [[ ! "$PATH" == */usr2/sdashora/.fzf/bin* ]]; then
-  PATH="${PATH:+${PATH}:}/usr2/sdashora/.fzf/bin"
+if [[ ! "$PATH" == ${HOME}/.fzf/bin* ]]; then
+  PATH="${PATH:+${PATH}:}${HOME}/.fzf/bin"
+  eval "$(fzf --bash)"
 fi
 
-eval "$(fzf --bash)"
+shopt -s histappend
+PROMPT_COMMAND="history -a;$PROMPT_COMMAND"
 
 source "$DOTFILES_DIR/bash/.bash_aliases"
 source "$DOTFILES_DIR/bash/.bash_prompt"

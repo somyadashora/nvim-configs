@@ -350,7 +350,6 @@ if [[ $- == *i* ]]; then
   __sd_prompt_command() {
     # Chain any pre-existing PROMPT_COMMAND before rebuilding this prompt.
     local last_status=$?
-    [[ -n "${__sd_prev_prompt_command:-}" ]] && eval "${__sd_prev_prompt_command}"
     __sd_build_ps1 "$last_status"
   }
 
@@ -360,7 +359,6 @@ if [[ $- == *i* ]]; then
       PROMPT_COMMAND="__sd_prompt_command"
       ;;
     *)
-      __sd_prev_prompt_command="${PROMPT_COMMAND}"
       PROMPT_COMMAND="__sd_prompt_command"
       ;;
   esac
