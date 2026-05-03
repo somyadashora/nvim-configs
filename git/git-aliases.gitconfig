@@ -10,103 +10,54 @@
 [alias]
 
     # ── Status & Info ───────────────────────────────────────
-    s    = status
-    ss   = status --short
-    sb   = status --short --branch
+    s    = status                    # Show working directory status
+    si   = status --ignored          # Show status including ignored files
 
     # ── Add / Stage ─────────────────────────────────────────
-    a    = add
-    aa   = add --all
-    ap   = add --patch
+    a    = add                       # Stage files for commit
+    aa   = add -A                    # Stage all files (tracked + untracked)
+    ap   = add -p                    # Interactive staging (patch mode)
 
     # ── Commit ──────────────────────────────────────────────
-    c    = commit
-    cm   = commit -m
-    ca   = commit --amend
-    can  = commit --amend --no-edit
-    ce   = commit --allow-empty -m
+    c    = commit                    # Create a commit
+    cm   = commit -m                 # Commit with message
+    ca   = commit --amend            # Amend last commit
+    ce   = commit --allow-empty -m   # Create empty commit with message
 
     # ── Checkout / Switch ───────────────────────────────────
-    co   = checkout
-    cb   = checkout -b
-    sw   = switch
-    swc  = switch -c
+    co   = checkout                  # Switch branches or restore files
+    cb   = checkout -b               # Create and switch to new branch
+    sw   = switch                    # Switch branches (Git 2.23+)
+    swc  = switch -c                 # Create and switch to new branch
 
     # ── Branch ──────────────────────────────────────────────
-    b    = branch
-    ba   = branch -a
-    bv   = branch -vv
-    bd   = branch -d
-    bD   = branch -D
-
-    # ── Push / Pull / Fetch ─────────────────────────────────
-    p    = push
-    pf   = push --force-with-lease
-    pu   = pull
-    pur  = pull --rebase
-    f    = fetch
-    fa   = fetch --all --prune
-
-    # ── Merge ───────────────────────────────────────────────
-    m    = merge
-    mn   = merge --no-ff
-    ma   = merge --abort
+    ba   = branch -a                 # List all branches (local + remote)
+    bv   = branch -vv                # List branches with last commit info
+    bd   = branch -d                 # Delete merged branch
+    bD   = branch -D                 # Force delete branch
 
     # ── Rebase ──────────────────────────────────────────────
-    rb   = rebase
-    ri   = rebase -i
-    rc   = rebase --continue
-    ra   = rebase --abort
-    rs   = rebase --skip
+    rb   = rebase                    # Rebase current branch
+    rbi  = rebase -i                 # Interactive rebase
+    rbc  = rebase --continue         # Continue rebase after conflict
+    rba  = rebase --abort            # Abort rebase
 
     # ── Log ─────────────────────────────────────────────────
-    l    = log --oneline
-    lg   = log --oneline --graph --decorate --all
-    ll   = log --oneline --graph --decorate --all --author-date-relative-format
-    lp   = log --patch
-    ls   = log --stat --oneline
+    l    = log --oneline             # Compact log (one line per commit)
+    lg   = log --oneline --graph --decorate --all  # Graphical log of all branches
+    ll   = log --oneline --graph --decorate --all --author-date-relative-format  # Enhanced graphical log
+    lp   = log --patch               # Log with full diffs
+    ls   = log --stat --oneline      # Log with file change stats
 
     # ── Diff ────────────────────────────────────────────────
-    d    = diff
-    ds   = diff --staged
-    dw   = diff --word-diff
-
-    # ── Stash ───────────────────────────────────────────────
-    st   = stash
-    stp  = stash pop
-    stl  = stash list
-    std  = stash drop
-    sts  = stash show -p
-
-    # ── Reset ───────────────────────────────────────────────
-    rh   = reset HEAD
-    rs   = reset --soft HEAD~1
-    rr   = reset --hard HEAD
-    rp   = restore --patch
-
-    # ── Remote ──────────────────────────────────────────────
-    rv   = remote -v
-    ra   = remote add
-    rr   = remote remove
-
-    # ── Tag ─────────────────────────────────────────────────
-    t    = tag
-    tl   = tag -l
-    ta   = tag -a
-
-    # ── Cherry-pick ─────────────────────────────────────────
-    cp   = cherry-pick
-    cpc  = cherry-pick --continue
-    cpa  = cherry-pick --abort
-
-    # ── Clone / Init ────────────────────────────────────────
-    cl   = clone
-    ini  = init
+    d    = diff                      # Show unstaged changes
+    ds   = diff --staged             # Show staged changes
+    dw   = diff --word-diff          # Show word-level differences
 
     # ── Misc / Handy ────────────────────────────────────────
-    bl   = blame
-    bs   = bisect
-    gr   = grep -n
-    sh   = show
-    wt   = worktree list
-    sub  = submodule update --init --recursive
+    bl   = blame                     # Show who last modified each line
+    bs   = bisect                    # Binary search for bug-introducing commit
+    gr   = grep -n                   # Search for text in files
+    sh   = show                      # Show commit details
+    wt   = worktree list             # List git worktrees
+    sub  = submodule update --init --recursive  # Update all submodules
