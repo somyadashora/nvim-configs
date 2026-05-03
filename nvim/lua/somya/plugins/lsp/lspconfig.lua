@@ -59,8 +59,37 @@ return {
         opts.desc = "Show documentation for what is under cursor"
         keymap.set("n", "K", vim.lsp.buf.hover, opts) -- show documentation for what is under cursor
 
+        -- SLANG related keymaps
+        opts.desc = "Slang trace signal drivers"
+        keymap.set("n", "<leader>Sd", function()
+          vim.lsp.buf.incoming_calls()
+        end, opts)
+
+        opts.desc = "Slang trace signal loads"
+        keymap.set("n", "<leader>Sl", function()
+          vim.lsp.buf.outgoing_calls()
+        end, opts)
+
+        opts.desc = "Open quickfix list"
+        keymap.set("n", "<leader>Sq", "<cmd>copen<CR>", opts)
+
+        opts.desc = "Show active LSP clients"
+        keymap.set("n", "<leader>Si", function()
+          local clients = vim.lsp.get_clients({ bufnr = ev.buf })
+          if #clients == 0 then
+            print("No active LSP clients for this buffer")
+            return
+          end
+
+          for _, client in ipairs(clients) do
+            print(client.name .. " root=" .. (client.config.root_dir or "nil"))
+          end
+        end, opts)
+
+
+
         opts.desc = "Restart LSP"
-        keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts) -- mapping to restart lsp if necessary
+        keymap.set("n", "<leader>Rs", ":LspRestart<CR>", opts) -- mapping to restart lsp if necessary
       end,
     })
 
