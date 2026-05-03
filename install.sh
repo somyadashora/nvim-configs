@@ -32,9 +32,7 @@ create_symlink() {
 echo "Installing dotfiles..."
 
 # Bash configuration files
-create_symlink "$DOTFILES_DIR/bash/.bash_aliases" "$HOME/.bash_aliases"
-create_symlink "$DOTFILES_DIR/bash/.bash_prompt" "$HOME/.bash_prompt"
-create_symlink "$DOTFILES_DIR/bash/.bash_rc" "$HOME/.bashrc"
+# create_symlink "$DOTFILES_DIR/bash/.bash_rc" "$HOME/.bashrc"
 
 # Neovim configuration
 mkdir -p "$HOME/.config"

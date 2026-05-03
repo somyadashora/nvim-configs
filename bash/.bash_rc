@@ -1,5 +1,13 @@
 
 
+# echo "Sourcing sdashora's bashrc"
+# export DOTFILES_DIR="${HOME}/.somyadashora/sd-dotfiles"
+# source "${DOTFILES_DIR}/bash/.bash_rc"
+
+# The above should be the last lines before jumping into this file
+# copying for usage in new env
+
+
 # Setup fzf
 # ---------
 if [[ ! "$PATH" == */usr2/sdashora/.fzf/bin* ]]; then
