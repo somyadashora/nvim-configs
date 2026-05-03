@@ -2,7 +2,7 @@
 
 alias ll="ls -lrtha --color=auto"
 
-alias tmux-cs="cat ~/.tmux.conf | awk '/TMUX CHEATSHEET/{found=1; next} found{if(/^# =/) exit; print}'"
+alias tmux-cs="sed -n '/TMUX CHEATSHEET/,/# split panes/p' \$DOTFILES_DIR/tmux/.tmux.conf | sed '\$d'"
 
 alias watchtty="watch -d -n 1 'ps -f --forest --tty $1'"
 
