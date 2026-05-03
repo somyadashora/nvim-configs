@@ -7,7 +7,7 @@
 #   - refresh expensive `git status` data asynchronously into a small cache
 if [[ $- == *i* ]]; then
   # How long cached git status flags are trusted before a background refresh.
-  : "${SD_GIT_PROMPT_CACHE_TTL:=30}"
+  : "${SD_GIT_PROMPT_CACHE_TTL:=15}"
 
   # Controls the expensive untracked-file part of `git status`.
   # Set `export SD_GIT_PROMPT_UNTRACKED=no` before sourcing this file for

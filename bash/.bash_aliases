@@ -2,6 +2,6 @@
 
 alias ll="ls -lrtha"
 
-alias watchtty="watch -d -n 1 'ps -ef --forest --tty $1'"
+alias watchtty="watch -d -n 1 'ps -f --forest --tty $1'"
 
 
