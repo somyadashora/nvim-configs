@@ -82,6 +82,7 @@ return {
     vim.lsp.config("verible", {
       capabilities = capabilities,
       cmd = { "verible-verilog-ls", "--rules_config_search" },
+      filetypes = { "verilog", "systemverilog" },
     })
 
     -- configure lua server with special settings
