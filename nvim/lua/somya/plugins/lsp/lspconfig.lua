@@ -85,6 +85,37 @@ return {
       filetypes = { "verilog", "systemverilog" },
     })
 
+    -- configure slang-server for system verilog
+    vim.lsp.config("slang-server", {
+        capabilities = capabilities,
+        cmd = { vim.fn.expand("~/.local/bin/slang-server") },
+        root_markers = { ".slang", ".git" },
+        filetypes = { "systemverilog", "verilog" },
+      })
+
+local function stop_lsp_by_name(name)
+    for _, client in ipairs(vim.lsp.get_clients({ name = name })) do
+      client:stop()
+    end
+  end
+
+  vim.api.nvim_create_user_command("UseVerible", function()
+    vim.lsp.enable("slang-server", false)
+    stop_lsp_by_name("slang-server")
+
+    vim.lsp.enable("verible", true)
+    vim.cmd("edit")
+  end, {})
+
+  vim.api.nvim_create_user_command("UseSlang", function()
+    vim.lsp.enable("verible", false)
+    stop_lsp_by_name("verible")
+
+    vim.lsp.enable("slang-server", true)
+    vim.cmd("edit")
+  end, {})
+
+
     -- configure lua server with special settings
     vim.lsp.config("lua_ls", {
       capabilities = capabilities,

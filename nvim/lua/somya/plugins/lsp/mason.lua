@@ -29,7 +29,9 @@ return {
       },
       PATH = "prepend",
       -- automatically enable installed servers (required for vim.lsp.config() API)
-      automatic_enable = true,
+      automatic_enable = {
+        exclude = { "verible", "slang-server" }, -- exclude servers that require custom setup
+      },
     })
   end,
 }
