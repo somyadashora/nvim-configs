@@ -1,0 +1,112 @@
+# ============================================================
+#  Git Aliases - Short & Sweet
+#  Usage: Add the following line to your ~/.gitconfig:
+#
+#    [include]
+#        path = /path/to/this/git-aliases.gitconfig
+#
+# ============================================================
+
+[alias]
+
+    # ── Status & Info ───────────────────────────────────────
+    s    = status
+    ss   = status --short
+    sb   = status --short --branch
+
+    # ── Add / Stage ─────────────────────────────────────────
+    a    = add
+    aa   = add --all
+    ap   = add --patch
+
+    # ── Commit ──────────────────────────────────────────────
+    c    = commit
+    cm   = commit -m
+    ca   = commit --amend
+    can  = commit --amend --no-edit
+    ce   = commit --allow-empty -m
+
+    # ── Checkout / Switch ───────────────────────────────────
+    co   = checkout
+    cb   = checkout -b
+    sw   = switch
+    swc  = switch -c
+
+    # ── Branch ──────────────────────────────────────────────
+    b    = branch
+    ba   = branch -a
+    bv   = branch -vv
+    bd   = branch -d
+    bD   = branch -D
+
+    # ── Push / Pull / Fetch ─────────────────────────────────
+    p    = push
+    pf   = push --force-with-lease
+    pu   = pull
+    pur  = pull --rebase
+    f    = fetch
+    fa   = fetch --all --prune
+
+    # ── Merge ───────────────────────────────────────────────
+    m    = merge
+    mn   = merge --no-ff
+    ma   = merge --abort
+
+    # ── Rebase ──────────────────────────────────────────────
+    rb   = rebase
+    ri   = rebase -i
+    rc   = rebase --continue
+    ra   = rebase --abort
+    rs   = rebase --skip
+
+    # ── Log ─────────────────────────────────────────────────
+    l    = log --oneline
+    lg   = log --oneline --graph --decorate --all
+    ll   = log --oneline --graph --decorate --all --author-date-relative-format
+    lp   = log --patch
+    ls   = log --stat --oneline
+
+    # ── Diff ────────────────────────────────────────────────
+    d    = diff
+    ds   = diff --staged
+    dw   = diff --word-diff
+
+    # ── Stash ───────────────────────────────────────────────
+    st   = stash
+    stp  = stash pop
+    stl  = stash list
+    std  = stash drop
+    sts  = stash show -p
+
+    # ── Reset ───────────────────────────────────────────────
+    rh   = reset HEAD
+    rs   = reset --soft HEAD~1
+    rr   = reset --hard HEAD
+    rp   = restore --patch
+
+    # ── Remote ──────────────────────────────────────────────
+    rv   = remote -v
+    ra   = remote add
+    rr   = remote remove
+
+    # ── Tag ─────────────────────────────────────────────────
+    t    = tag
+    tl   = tag -l
+    ta   = tag -a
+
+    # ── Cherry-pick ─────────────────────────────────────────
+    cp   = cherry-pick
+    cpc  = cherry-pick --continue
+    cpa  = cherry-pick --abort
+
+    # ── Clone / Init ────────────────────────────────────────
+    cl   = clone
+    ini  = init
+
+    # ── Misc / Handy ────────────────────────────────────────
+    bl   = blame
+    bs   = bisect
+    gr   = grep -n
+    sh   = show
+    wt   = worktree list
+    sub  = submodule update --init --recursive

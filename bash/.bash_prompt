@@ -1,0 +1,367 @@
+
+# Colorful, Git-aware prompt.
+#
+# Keep this prompt cheap for very large repos:
+#   - find the repo by walking parent directories instead of `git rev-parse`
+#   - read `.git/HEAD` directly instead of `git symbolic-ref`
+#   - refresh expensive `git status` data asynchronously into a small cache
+if [[ $- == *i* ]]; then
+  # How long cached git status flags are trusted before a background refresh.
+  : "${SD_GIT_PROMPT_CACHE_TTL:=30}"
+
+  # Controls the expensive untracked-file part of `git status`.
+  # Set `export SD_GIT_PROMPT_UNTRACKED=no` before sourcing this file for
+  # maximum speed in very large repos.
+  : "${SD_GIT_PROMPT_UNTRACKED:=normal}"
+
+  # Controls compact path display for deep directories.  Edit these values
+  # and run `source ~/.bashrc.local` to change the prompt immediately.
+  # Example with top=2 and bottom=4:
+  #   ~/dir1/dir2/dir3/.../dir8/dir9 -> ~/dir1/dir2/--/dir6/dir7/dir8/dir9
+  # Example with top=0 and bottom=3:
+  #   ~/dir1/dir2/dir3/.../dir8/dir9 -> ~/--/dir7/dir8/dir9
+  SD_PROMPT_PATH_TOP_DIRS=2
+  SD_PROMPT_PATH_BOTTOM_DIRS=2
+
+  # Small bit of shell state used to avoid recomputing paths every prompt.
+  __sd_git_prompt_last_root=""
+  __sd_git_prompt_cache_file=""
+  __sd_git_prompt_segment_value=""
+  __sd_git_repo_root=""
+  __sd_git_dir=""
+  __sd_git_head_value=""
+  __sd_git_status_flags=""
+  __sd_prompt_path_value=""
+  __sd_prompt_escaped_value=""
+
+  __sd_git_find() {
+    # Locate the current git work tree without invoking git.  This avoids the
+    # cost of `git rev-parse --is-inside-work-tree` on every prompt.
+    __sd_git_repo_root=""
+    __sd_git_dir=""
+
+    local dir="$PWD" git_entry git_dir
+    while :; do
+      if [[ -d "$dir/.git" ]]; then
+        __sd_git_repo_root="$dir"
+        __sd_git_dir="$dir/.git"
+        return 0
+      fi
+
+      if [[ -f "$dir/.git" ]]; then
+        # Worktrees/submodules use a `.git` file that points at the real git dir.
+        IFS= read -r git_entry < "$dir/.git" || return 1
+        git_entry=${git_entry#gitdir: }
+        if [[ "$git_entry" == /* ]]; then
+          git_dir="$git_entry"
+        else
+          git_dir="$dir/$git_entry"
+        fi
+        git_dir=$(cd -P -- "$git_dir" 2>/dev/null && pwd) || return 1
+        __sd_git_repo_root="$dir"
+        __sd_git_dir="$git_dir"
+        return 0
+      fi
+
+      [[ "$dir" == "/" ]] && return 1
+      dir=${dir%/*}
+      [[ -z "$dir" ]] && dir="/"
+    done
+  }
+
+  __sd_git_head_name() {
+    # Read the branch/detached-HEAD name directly from `.git/HEAD` instead of
+    # running `git symbolic-ref` or `git rev-parse` in the foreground.
+    __sd_git_head_value=""
+
+    local git_dir=$1 head ref
+    [[ -r "$git_dir/HEAD" ]] || return 1
+    IFS= read -r head < "$git_dir/HEAD" || return 1
+
+    case "$head" in
+      "ref: refs/heads/"*)
+        __sd_git_head_value=${head#ref: refs/heads/}
+        ;;
+      "ref: refs/"*)
+        ref=${head#ref: refs/}
+        __sd_git_head_value=$ref
+        ;;
+      "")
+        return 1
+        ;;
+      *)
+        __sd_git_head_value=${head:0:7}
+        ;;
+    esac
+  }
+
+  __sd_git_cache_file_for_root() {
+    # Keep one tiny cache file per repo root.  The cksum key makes cache names
+    # stable and avoids unsafe path characters in filenames.
+    local repo_root=$1 cache_dir key
+
+    if [[ "$repo_root" == "$__sd_git_prompt_last_root" && -n "$__sd_git_prompt_cache_file" ]]; then
+      return 0
+    fi
+
+    cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/bash-git-prompt"
+    mkdir -p "$cache_dir" 2>/dev/null || return 1
+
+    if command -v cksum >/dev/null 2>&1; then
+      key=$(printf '%s' "$repo_root" | cksum)
+      key=${key%% *}
+    else
+      key=${repo_root//\//_}
+      key=${key// /_}
+    fi
+
+    __sd_git_prompt_last_root=$repo_root
+    __sd_git_prompt_cache_file="$cache_dir/${USER:-user}.${key}.status"
+  }
+
+  __sd_git_parse_status() {
+    # Parse porcelain-v2 status once in the background and reduce it to compact
+    # prompt flags: + staged, * modified, ? untracked, ^ ahead, v behind.
+    local status_line=$1 line ahead behind staged modified untracked x y flags=""
+
+    while IFS= read -r line; do
+      case "$line" in
+        "# branch.ab "*)
+          line=${line#"# branch.ab "}
+          ahead=${line%% *}
+          behind=${line#* }
+          ahead=${ahead#+}
+          behind=${behind#-}
+          ;;
+        [12]*|u*)
+          x=${line:2:1}
+          y=${line:3:1}
+          [[ "$x" != "." ]] && staged=1
+          [[ "$y" != "." ]] && modified=1
+          ;;
+        "? "*)
+          untracked=1
+          ;;
+      esac
+    done <<< "$status_line"
+
+    [[ -n "$staged" ]] && flags+="+"
+    [[ -n "$modified" ]] && flags+="*"
+    [[ -n "$untracked" ]] && flags+="?"
+    [[ "$ahead" != "0" && -n "$ahead" ]] && flags+="^${ahead}"
+    [[ "$behind" != "0" && -n "$behind" ]] && flags+="v${behind}"
+
+    printf '%s' "$flags"
+  }
+
+  __sd_git_refresh_status_async() {
+    # Run the only expensive operation (`git status`) in the background.  The
+    # prompt never waits for this; it keeps showing the previous cached result.
+    local repo_root=$1 cache_file=$2 now=$3
+
+    (
+      local lock tmp untracked_mode status_line flags
+      lock="${cache_file}.lock"
+
+      (
+        if mkdir "$lock" 2>/dev/null; then
+          # `mkdir` is used as a cheap lock so repeated prompts do not launch a
+          # pile of concurrent `git status` processes for the same repository.
+          trap 'rmdir "$lock"' EXIT
+
+          case "${SD_GIT_PROMPT_UNTRACKED:-normal}" in
+            no|normal|all) untracked_mode=${SD_GIT_PROMPT_UNTRACKED:-normal} ;;
+            *) untracked_mode=normal ;;
+          esac
+
+          status_line=$(GIT_OPTIONAL_LOCKS=0 git -C "$repo_root" status --porcelain=2 --branch --untracked-files="$untracked_mode" 2>/dev/null) || exit
+          flags=$(__sd_git_parse_status "$status_line")
+          printf -v now '%(%s)T' -1 2>/dev/null || now=$(date +%s)
+
+          # Write to a temp file and atomically rename it so the foreground
+          # prompt never reads a partially-written cache.
+          tmp="${cache_file}.$$.$RANDOM.tmp"
+          { printf '%s\n' "$now"; printf '%s\n' "$flags"; } > "$tmp" && mv "$tmp" "$cache_file"
+        fi
+      ) >/dev/null 2>&1 &
+    ) >/dev/null 2>&1
+  }
+
+  __sd_git_status_flags_cached() {
+    # Read cached status flags immediately.  If the cache is missing or stale,
+    # trigger a background refresh and return without blocking the prompt.
+    __sd_git_status_flags=""
+
+    local repo_root=$1 cache_file cache_time flags now ttl
+    __sd_git_cache_file_for_root "$repo_root" || return 1
+    cache_file=$__sd_git_prompt_cache_file
+
+    if [[ -n ${EPOCHSECONDS+x} ]]; then
+      now=$EPOCHSECONDS
+    else
+      printf -v now '%(%s)T' -1 2>/dev/null || now=$(date +%s)
+    fi
+    ttl=${SD_GIT_PROMPT_CACHE_TTL:-30}
+    [[ "$ttl" =~ ^[0-9]+$ ]] || ttl=30
+
+    if [[ -r "$cache_file" ]]; then
+      # Cache format is two lines: unix timestamp, then compact flag string.
+      {
+        IFS= read -r cache_time || cache_time=0
+        IFS= read -r flags || flags=""
+      } < "$cache_file"
+      [[ "$cache_time" =~ ^[0-9]+$ ]] || cache_time=0
+      __sd_git_status_flags=$flags
+    else
+      # First prompt in a repo shows `…` until the async refresh populates cache.
+      cache_time=0
+      __sd_git_status_flags="…"
+    fi
+
+    if (( ttl > 0 && (now < cache_time || now - cache_time >= ttl) )); then
+      __sd_git_refresh_status_async "$repo_root" "$cache_file" "$now"
+    fi
+  }
+
+  __sd_git_prompt_segment() {
+    # Compose only the git portion of PS1.  Branch name is live; dirty status is
+    # cached so large repositories do not make every prompt sluggish.
+    __sd_git_prompt_segment_value=""
+
+    __sd_git_find || return
+    __sd_git_head_name "$__sd_git_dir" || return
+    __sd_git_status_flags_cached "$__sd_git_repo_root"
+
+    local c_reset='\[\e[0m\]' c_clean='\[\e[38;5;82m\]' c_dirty='\[\e[38;5;214m\]'
+    local branch=$__sd_git_head_value flags=$__sd_git_status_flags
+
+    if [[ "$flags" == "…" ]]; then
+      printf -v __sd_git_prompt_segment_value ' %s[%s|…]%s' "$c_dirty" "$branch" "$c_reset"
+    elif [[ -z "$flags" ]]; then
+      printf -v __sd_git_prompt_segment_value ' %s[%s|clean]%s' "$c_clean" "$branch" "$c_reset"
+    else
+      printf -v __sd_git_prompt_segment_value ' %s[%s|%s]%s' "$c_dirty" "$branch" "$flags" "$c_reset"
+    fi
+  }
+
+  __sd_prompt_escape() {
+    # PS1 is expanded by Bash when the prompt is drawn. Escape characters that
+    # could otherwise be interpreted if a directory name contains dollar signs,
+    # backticks, or backslashes.
+    __sd_prompt_escaped_value=$1
+    __sd_prompt_escaped_value=${__sd_prompt_escaped_value//\\/\\\\}
+    __sd_prompt_escaped_value=${__sd_prompt_escaped_value//\$/\\\$}
+    __sd_prompt_escaped_value=${__sd_prompt_escaped_value//\`/\\\`}
+  }
+
+  __sd_prompt_path_segment() {
+    # Build a compact path for deep directories.  The number of directories kept
+    # from the top and bottom comes from SD_PROMPT_PATH_TOP_DIRS and
+    # SD_PROMPT_PATH_BOTTOM_DIRS above.
+    # Example with top=2 and bottom=4:
+    #   ~/dir1/dir2/dir3/.../dir8/dir9 -> ~/dir1/dir2/--/dir6/dir7/dir8/dir9
+    # If the path is not deeper than top+bottom, it is shown in full.
+    __sd_prompt_path_value=""
+
+    local path=$PWD prefix rest count display top_dirs bottom_dirs top_path bottom_path idx
+    local parts=()
+
+    top_dirs=${SD_PROMPT_PATH_TOP_DIRS:-2}
+    bottom_dirs=${SD_PROMPT_PATH_BOTTOM_DIRS:-2}
+    [[ "$top_dirs" =~ ^[0-9]+$ ]] || top_dirs=2
+    [[ "$bottom_dirs" =~ ^[0-9]+$ ]] || bottom_dirs=2
+
+    if [[ "$path" == "$HOME" ]]; then
+      display="~"
+    else
+      if [[ "$path" == "$HOME"/* ]]; then
+        prefix="~"
+        rest=${path#"$HOME"/}
+      else
+        prefix="/"
+        rest=${path#/}
+      fi
+
+      IFS=/ read -r -a parts <<< "$rest"
+      count=${#parts[@]}
+
+      if (( top_dirs + bottom_dirs > 0 && count > top_dirs + bottom_dirs )); then
+        # Deep path: keep configurable directories from the top and near $PWD.
+        top_path=""
+        for ((idx = 0; idx < top_dirs && idx < count; idx++)); do
+          top_path+="/${parts[idx]}"
+        done
+
+        bottom_path=""
+        for ((idx = count - bottom_dirs; idx < count; idx++)); do
+          (( idx >= 0 )) && bottom_path+="/${parts[idx]}"
+        done
+
+        if [[ "$prefix" == "~" ]]; then
+          if [[ -n "$top_path" ]]; then
+            display="~${top_path}/--${bottom_path}"
+          else
+            display="~/--${bottom_path}"
+          fi
+        else
+          if [[ -n "$top_path" ]]; then
+            display="${top_path}/--${bottom_path}"
+          else
+            display="/--${bottom_path}"
+          fi
+        fi
+      elif [[ "$prefix" == "~" ]]; then
+        display="~/${rest}"
+      elif [[ -n "$rest" ]]; then
+        display="/${rest}"
+      else
+        display="/"
+      fi
+    fi
+
+    __sd_prompt_escape "$display"
+    __sd_prompt_path_value=$__sd_prompt_escaped_value
+  }
+
+  __sd_build_ps1() {
+    # Preserve the previous command's exit code in the prompt, then append the
+    # fast git segment if the current directory is inside a repo.
+    local last_status=${1:-0}
+
+    local c_reset='\[\e[0m\]' c_user='\[\e[38;5;39m\]' c_host='\[\e[38;5;75m\]' c_path='\[\e[38;5;141m\]'
+    local c_ok='\[\e[38;5;70m\]' c_err='\[\e[38;5;196m\]'
+
+    local rc_segment=""
+    if [[ $last_status -eq 0 ]]; then
+      rc_segment="${c_ok}●${c_reset} "
+    else
+      rc_segment="${c_err}X${last_status}${c_reset} "
+    fi
+
+    local git_segment path_segment
+    __sd_git_prompt_segment
+    git_segment=$__sd_git_prompt_segment_value
+    __sd_prompt_path_segment
+    path_segment=$__sd_prompt_path_value
+
+    PS1="${rc_segment}${c_user}\\u${c_reset}@${c_host}\\h${c_reset}:${c_path}${path_segment}${c_reset}${git_segment} \\$ "
+  }
+
+  __sd_prompt_command() {
+    # Chain any pre-existing PROMPT_COMMAND before rebuilding this prompt.
+    local last_status=$?
+    [[ -n "${__sd_prev_prompt_command:-}" ]] && eval "${__sd_prev_prompt_command}"
+    __sd_build_ps1 "$last_status"
+  }
+
+  case ";${PROMPT_COMMAND};" in
+    *";__sd_prompt_command;"*) ;;
+    ";;")
+      PROMPT_COMMAND="__sd_prompt_command"
+      ;;
+    *)
+      __sd_prev_prompt_command="${PROMPT_COMMAND}"
+      PROMPT_COMMAND="__sd_prompt_command"
+      ;;
+  esac
+fi

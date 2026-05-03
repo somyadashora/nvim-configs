@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Dotfiles install script
+# This script creates symlinks from your home directory to the dotfiles in this repository.
+
+set -e
+
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Function to create symlink
+create_symlink() {
+    local source=$1
+    local target=$2
+
+    if [ -L "$target" ] && [ "$(readlink "$target")" = "$source" ]; then
+        echo "Symlink already exists and points to correct location: $target"
+        return
+    fi
+
+    if [ -e "$target" ] && [ ! -L "$target" ]; then
+        echo "Backing up existing file: $target -> $target.backup"
+        mv "$target" "$target.backup"
+    elif [ -L "$target" ]; then
+        echo "Removing existing symlink: $target"
+        rm "$target"
+    fi
+
+    ln -s "$source" "$target"
+    echo "Created symlink: $target -> $source"
+}
+
+echo "Installing dotfiles..."
+
+# Bash configuration files
+create_symlink "$DOTFILES_DIR/bash/.bash_aliases" "$HOME/.bash_aliases"
+create_symlink "$DOTFILES_DIR/bash/.bash_prompt" "$HOME/.bash_prompt"
+create_symlink "$DOTFILES_DIR/bash/.bash_rc" "$HOME/.bashrc"
+
+# Neovim configuration
+mkdir -p "$HOME/.config"
+create_symlink "$DOTFILES_DIR/nvim" "$HOME/.config/nvim"
+
+# Tmux configuration
+create_symlink "$DOTFILES_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
+
+echo "Dotfiles installation complete!"
+echo "You may need to restart your shell or reload your configuration."
