@@ -1,3 +1,12 @@
 
 
+# Setup fzf
+# ---------
+if [[ ! "$PATH" == */usr2/sdashora/.fzf/bin* ]]; then
+  PATH="${PATH:+${PATH}:}/usr2/sdashora/.fzf/bin"
+fi
 
+eval "$(fzf --bash)"
+
+source "$DOTFILES_DIR/bash/.bash_aliases"
+source "$DOTFILES_DIR/bash/.bash_prompt"
