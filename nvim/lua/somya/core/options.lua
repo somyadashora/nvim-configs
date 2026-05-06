@@ -31,7 +31,6 @@ opt.cursorlineopt ='number'
 
 -- appearance
 
-opt.colorcolumn = "80,100" -- line at 80 characters, for some languages like python that is a common line length limit
 
 -- turn on termguicolors for nightfly colorscheme to work
 -- (have to use iterm2 or any other true color terminal)
