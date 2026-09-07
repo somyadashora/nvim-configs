@@ -32,6 +32,8 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/display/widgets/peripheral_status.h>
 #include <zmk/display/widgets/wpm_status.h>
 
+#include "ext_power_boot.h"
+
 /* CONFIG_ZMK_SPLIT_ROLE_CENTRAL is only meaningful on a split, and this
  * shield is always one -- but spell it out so the file is honest about what
  * it assumes. */
@@ -64,6 +66,13 @@ static struct zmk_widget_wpm_status wpm_status_widget;
 #endif
 
 lv_obj_t *zmk_display_status_screen(void) {
+    /* Before anything is drawn: make sure the panel actually has power.
+     * main() applies the saved ext-power state in settings_load() just above
+     * this call, and that state survives reflashing -- so without this a board
+     * that once cut the rail comes up dark no matter what firmware you give
+     * it. See ext_power_boot.c for the full story. */
+    sd_force_ext_power_on();
+
     lv_obj_t *screen = lv_obj_create(NULL);
 
 #if SD_IS_PERIPHERAL

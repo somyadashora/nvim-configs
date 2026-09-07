@@ -1005,9 +1005,18 @@ underglow driver cuts that rail on idle and the wake path never restores it
 (it re-applies the pre-idle LED state, which is off), so the OLEDs die 30s
 after every boot and stay dead. `n` costs the strip's quiescent draw forever,
 which is now the biggest battery item; there is no third option, since one
-rail feeds both. The rail's state persists across reflashes, so a board that
-already cut it needs one press of **ADJ+EPTOG** (`&ext_power EP_TOG`), not
-another firmware.
+rail feeds both. The rail's state persists across reflashes — the setting outlives the
+firmware that wrote it — so `keyboard/display/ext_power_boot.c` forces the rail
+on from the top of `zmk_display_status_screen()`, the first point `main()`
+reaches after `settings_load()` has applied the stale value (a `SYS_INIT` is too
+early; every init level runs before `main()`). It runs unconditionally, so the
+dark-OLED state cannot be re-entered. The SSD1306's own init happens in the
+Zephyr driver at `POST_KERNEL`, before `main()`, so a rail cut during
+`settings_load` may still brown the panel out on the FIRST boot after flashing
+(zmk#674, no re-init path); leave it powered a minute for the 60s settings
+debounce and power-cycle once, after which the saved state is ON and every boot
+is clean. **ADJ+EPTOG** (`&ext_power EP_TOG`, on `P`) remains a manual
+within-session switch that no longer survives a reboot.
 
 **OLED displays** — both halves run a 128x32 SSD1306. What each half may show
 is ZMK's decision, not a preference: every interesting widget is

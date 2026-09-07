@@ -14,6 +14,7 @@ if(CONFIG_ZMK_DISPLAY AND CONFIG_ZMK_DISPLAY_STATUS_SCREEN_CUSTOM)
   zephyr_library_include_directories(${CMAKE_SOURCE_DIR}/include)
 
   zephyr_library_sources(display/status_screen.c)
+  zephyr_library_sources(display/ext_power_boot.c)
 
   # The logo is peripheral-only, so the central half does not carry the
   # bitmap in flash for nothing.

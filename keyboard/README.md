@@ -111,9 +111,9 @@ Per-key SK6812MINI-E LEDs, no underglow strip. 1000mAh per half.
 - **Halves won't pair, or Studio state is stuck** — flash `settings_reset.uf2`
   to the affected half, let it boot once, then flash the real firmware back.
   This is also the nuclear option for the Studio-overrides-your-keymap trap.
-- **OLEDs are dark** — almost certainly the external power rail, not the
-  display config. Press **ADJ + EPTOG** once; the rail's state is saved to
-  flash and survives reflashing, so no firmware will fix it for you. See
+- **OLEDs are dark** — the external power rail, not the display config. Since
+  `display/ext_power_boot.c` this should self-heal: leave the board powered
+  for a minute (the settings debounce) and power-cycle once. See
   [Displays](#displays).
 - **Encoders do nothing** — `CONFIG_EC11` in `sofle.conf`. The stock shield
   ships it commented out.
@@ -386,10 +386,39 @@ Hence `CONFIG_ZMK_RGB_UNDERGLOW_EXT_POWER=n`. `AUTO_OFF_IDLE` still works --
 it just blanks the pixels instead of cutting the rail.
 
 **The rail's state is saved to flash and survives a reflash.** ZMK's docs are
-explicit about it. So a board that ever cut the rail comes up dark no matter
-what you flash, and the fix is not another firmware: press **ADJ + EPTOG**
-(`&ext_power EP_TOG`, next to `OUT`) once. Nothing turns the rail off on its
-own any more, so it is a one-time repair.
+explicit about it, which makes it the nastiest part of this: a board that ever
+cut the rail comes up dark *no matter what firmware you give it*, because the
+setting outlives the firmware that wrote it.
+
+`display/ext_power_boot.c` removes that trap. It forces the rail on from the
+top of `zmk_display_status_screen()`, which `main()` reaches immediately after
+`settings_load()` has applied the stale value:
+
+```
+settings_subsys_init();
+settings_load();      <- ext_power's commit handler may cut the rail here
+zmk_display_init();   <- calls zmk_display_status_screen(), i.e. us
+```
+
+That is the first opportunity after the damage. A `SYS_INIT` would be too
+early (every init level runs before `main()`), and a settings commit handler
+of our own would race ZMK's on link order. It runs unconditionally rather than
+checking the stored state, so the dark-OLED state cannot be re-entered.
+
+**One caveat on the first boot after flashing.** The SSD1306's own init
+sequence runs in the Zephyr driver at `POST_KERNEL`, before `main()`. If the
+rail is cut during `settings_load` the panel loses that init and ZMK has no
+re-init path ([zmk#674]) -- re-powering it microseconds later may or may not
+beat the brown-out. It stops mattering after that: `ext_power_enable()` queues
+the state back to flash, so once the board has been up for
+`CONFIG_ZMK_SETTINGS_SAVE_DEBOUNCE` (60 s) the saved state is ON,
+`settings_load` stops cutting the rail, and every later boot has continuous
+power from `POST_KERNEL` onward. **So if the OLEDs are dark on the first boot
+after flashing, leave it powered a minute and power-cycle once.**
+
+**ADJ + EPTOG** (`&ext_power EP_TOG`, on `P`, next to `OUT`) is still bound as
+a manual switch for killing the LED rail within a session. It no longer
+survives a reboot -- the boot hook wins, by design.
 
 [zmk#674]: https://github.com/zmkfirmware/zmk/issues/674
 
