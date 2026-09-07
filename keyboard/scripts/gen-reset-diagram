@@ -1,0 +1,234 @@
+#!/usr/bin/env python3
+"""Regenerate reset-button-location.svg -- where RSW1 is on the LEFT half.
+
+The output is committed, so nobody needs this script just to READ the diagram.
+
+Why this exists: this board's reset button is sealed inside the case, and the
+one time you need it is the one time the keymap cannot help you -- after
+flashing settings_reset, which leaves no keymap on the chip, so the `+5
+bootloader combo is gone until the real firmware is back. At that point the
+only way in is a physical double-tap, and "somewhere near the controller" is
+not good enough when you are working blind under a switch plate.
+
+So the geometry is taken from upstream's KiCad PCB rather than drawn by hand:
+
+    josefadamcik/SofleKeyboard  Sofle_RGB/PCB/SofleKeyboard.kicad_pcb
+
+RSW1 (reset), J2 (TRRS), J3 (OLED header), U1 (controller) and SW25 (encoder)
+sit in the same relative positions in Sofle v1, v2 and RGB -- checked against
+all three -- so the picture holds across revisions. Vendor clones are close
+but not guaranteed; verify against the board in front of you.
+
+Two things the PCB file cannot tell us, both marked approximate in the output:
+the OLED *module* outline (the file has the header, not the module -- 38x12mm
+is the common 0.91" SSD1306) and the controller body, inferred from its pad
+rows. Neither affects where RSW1 is.
+
+The Sofle PCB is reversible -- one design, flipped over for the other half --
+and the file draws the RIGHT half, so every x is mirrored about the board
+centre to give the LEFT half as you look down at it.
+
+    ./scripts/gen-reset-diagram          # needs network, fetches the PCB
+"""
+
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+PCB_URL = ("https://raw.githubusercontent.com/josefadamcik/SofleKeyboard/"
+           "master/Sofle_RGB/PCB/SofleKeyboard.kicad_pcb")
+OUT = Path(__file__).resolve().parent.parent / "reset-button-location.svg"
+
+# Component centres, in the PCB's own mm coordinates (right half as drawn).
+# Refs are upstream's; re-read them from the .kicad_pcb if you ever doubt these.
+REFS = {
+    "RSW1": (90.00, 77.50),    # reset, TACT_SWITCH_TVBP06, legs 6.5mm apart
+    "J2":   (88.00, 85.65),    # TRRS jack, MJ-4PP-9
+    "J3":   (96.70, 74.60),    # OLED 4-pin header, pads 96.70..104.32
+    "U1":   (101.00, 56.00),   # controller, pads x 92.18..108.72 y 41.23..70.37
+    "SW25": (100.00, 104.50),  # rotary encoder
+}
+EDGE = (82.10, 225.47)         # board Edge.Cuts x extent
+
+
+def modules(pcb: str):
+    """Yield each top-level (module ...) block, paren-matched.
+
+    Not a regex: a lazy pattern spanning from `(module` to `(fp_text reference
+    X` happily crosses block boundaries and hands you a NEIGHBOUR's position.
+    """
+    i = 0
+    while True:
+        i = pcb.find("\n  (module ", i)
+        if i < 0:
+            return
+        j = pcb.index("(module", i)
+        depth, k = 0, j
+        while True:
+            if pcb[k] == "(":
+                depth += 1
+            elif pcb[k] == ")":
+                depth -= 1
+                if depth == 0:
+                    break
+            k += 1
+        yield pcb[j:k + 1]
+        i = k
+
+
+def verify(pcb: str) -> None:
+    """Fail loudly if upstream moved anything this diagram hardcodes."""
+    found = {}
+    for blk in modules(pcb):
+        ref = re.search(r"\(fp_text reference (\S+)", blk)
+        at = re.search(r"\(at ([-\d.]+) ([-\d.]+)", blk)
+        if ref and at and ref.group(1) in REFS:
+            found[ref.group(1)] = (float(at.group(1)), float(at.group(2)))
+    for ref, (want_x, want_y) in REFS.items():
+        if ref not in found:
+            sys.exit(f"{ref} not found in the PCB -- upstream layout changed?")
+        got = found[ref]
+        if abs(got[0] - want_x) > 0.05 or abs(got[1] - want_y) > 0.05:
+            sys.exit(f"{ref} moved: PCB says {got}, diagram assumes "
+                     f"({want_x}, {want_y}). Update REFS and redraw.")
+
+
+CX = EDGE[0] + EDGE[1]                  # 2 * board centre; mirror is CX - x
+M = lambda x: CX - x
+
+S = 9.0                                 # px per mm
+X0, X1 = 176.0, 246.0                   # crop window, mirrored mm
+Y0, Y1 = 32.0, 118.0
+px = lambda x: (x - X0) * S
+py = lambda y: (y - Y0) * S
+W, H = (X1 - X0) * S, (Y1 - Y0) * S
+
+edge_in = M(EDGE[0])
+nano = (M(110.00), 40.0, M(92.20), 72.0)
+oled_pins = [M(x) for x in (96.70, 99.24, 101.78, 104.32)]
+oled_y = 74.60
+oled_mod = (M(106.51), 36.6, M(94.51), 74.60)
+rsw = (M(REFS["RSW1"][0]), REFS["RSW1"][1])
+rsw_legs = [74.25, 80.75]
+trrs = (M(100.30), 82.20, M(87.00), 89.90)
+enc = (M(REFS["SW25"][0]), REFS["SW25"][1], 7.2)
+keys = [(M(120.50), y) for y in (50.00, 69.10, 88.10, 107.10)]
+
+
+def rect(x2, y1, x1, y2, **kw):
+    a = {"fill": "none", "stroke": "#333"}
+    a.update({k.replace("_", "-"): v for k, v in kw.items()})
+    return (f'<rect x="{px(min(x1, x2)):.1f}" y="{py(y1):.1f}" '
+            f'width="{abs(px(x2) - px(x1)):.1f}" height="{py(y2) - py(y1):.1f}" '
+            + " ".join(f'{k}="{v}"' for k, v in a.items()) + "/>")
+
+
+def render() -> str:
+    o = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W:.0f}" height="{H:.0f}" '
+         f'viewBox="0 0 {W:.0f} {H:.0f}" '
+         f'font-family="DejaVu Sans, Helvetica, Arial, sans-serif">',
+         f'<rect width="{W:.0f}" height="{H:.0f}" fill="#fbfaf8"/>']
+
+    o.append(f'<rect x="0" y="0" width="{px(edge_in):.1f}" height="{H:.0f}" '
+             f'fill="#1f5e3f" opacity="0.09"/>')
+    o.append(f'<line x1="{px(edge_in):.1f}" y1="0" x2="{px(edge_in):.1f}" y2="{H:.0f}" '
+             f'stroke="#1f5e3f" stroke-width="3"/>')
+    o.append(f'<text x="{px(edge_in) - 8:.0f}" y="{py(108):.0f}" font-size="14" '
+             f'fill="#1f5e3f" text-anchor="end">inner edge - faces the right half</text>')
+
+    for kx, ky in keys:
+        o.append(rect(kx - 7, ky - 7, kx + 7, ky + 7, stroke="#bbb",
+                      stroke_width="1.5", stroke_dasharray="3 3"))
+    o.append(f'<text x="{px(keys[0][0]):.0f}" y="{py(37):.0f}" font-size="14" '
+             f'fill="#999" text-anchor="middle">key field</text>')
+
+    o.append(rect(*nano, fill="#2b3a55", opacity="0.85", stroke="#16203a", stroke_width="2"))
+    cx = px((nano[0] + nano[2]) / 2)
+    o.append(f'<text x="{cx:.0f}" y="{py(58):.0f}" font-size="16" fill="#fff" '
+             f'text-anchor="middle" transform="rotate(-90 {cx:.0f} {py(58):.0f})">'
+             f'nice!nano v2</text>')
+
+    o.append(rect(*oled_mod, stroke="#0a6ea8", stroke_width="2",
+                  stroke_dasharray="7 5", fill="#0a6ea8", opacity="0.14"))
+    ocx = px((oled_mod[0] + oled_mod[2]) / 2)
+    o.append(f'<text x="{ocx:.0f}" y="{py(41):.0f}" font-size="14" fill="#0a6ea8" '
+             f'text-anchor="middle">OLED module</text>')
+    o.append(f'<text x="{ocx:.0f}" y="{py(44.5):.0f}" font-size="11" fill="#0a6ea8" '
+             f'text-anchor="middle">(approx. 38 x 12 mm)</text>')
+    for x in oled_pins:
+        o.append(f'<circle cx="{px(x):.1f}" cy="{py(oled_y):.1f}" r="{0.9 * S:.1f}" '
+                 f'fill="#c9a227" stroke="#7a5f0f"/>')
+    o.append(f'<text x="{px(min(oled_pins)) - 10:.0f}" y="{py(oled_y) + 5:.0f}" '
+             f'font-size="13" fill="#7a5f0f" text-anchor="end">4-pin OLED header</text>')
+
+    o.append(rect(*trrs, fill="#555", opacity="0.8", stroke="#222", stroke_width="2"))
+    o.append(f'<text x="{px((trrs[0] + trrs[2]) / 2):.0f}" y="{py(86.8):.0f}" '
+             f'font-size="15" fill="#fff" text-anchor="middle">TRRS jack</text>')
+
+    o.append(f'<circle cx="{px(enc[0]):.1f}" cy="{py(enc[1]):.1f}" r="{enc[2] * S:.1f}" '
+             f'fill="none" stroke="#888" stroke-width="2" stroke-dasharray="5 4"/>')
+    o.append(f'<text x="{px(enc[0]):.0f}" y="{py(enc[1]) + 5:.0f}" font-size="14" '
+             f'fill="#777" text-anchor="middle">encoder</text>')
+
+    rx, ry = rsw
+    o.append(f'<rect x="{px(rx) - 3.0 * S:.1f}" y="{py(ry) - 3.0 * S:.1f}" '
+             f'width="{6.0 * S:.1f}" height="{6.0 * S:.1f}" rx="4" '
+             f'fill="#d20f31" stroke="#7d0a1d" stroke-width="2.5"/>')
+    o.append(f'<circle cx="{px(rx):.1f}" cy="{py(ry):.1f}" r="{1.75 * S:.1f}" '
+             f'fill="#f4f1ec" stroke="#7d0a1d" stroke-width="2"/>')
+    for ly in rsw_legs:
+        o.append(f'<circle cx="{px(rx):.1f}" cy="{py(ly):.1f}" r="{1.0 * S:.1f}" '
+                 f'fill="#c9a227" stroke="#7a5f0f" stroke-width="1.5"/>')
+    o.append(f'<text x="{px(rx):.0f}" y="{py(rsw_legs[0]) - 14:.0f}" font-size="12" '
+             f'fill="#7a5f0f" text-anchor="middle">legs 6.5 mm apart</text>')
+
+    lx, ly2 = px(rx) + 3.6 * S, py(ry) - 2.0 * S
+    o.append(f'<line x1="{px(rx) + 3.2 * S:.1f}" y1="{py(ry):.1f}" x2="{lx + 18:.0f}" '
+             f'y2="{ly2:.0f}" stroke="#d20f31" stroke-width="2.5"/>')
+    o.append(f'<text x="{lx + 24:.0f}" y="{ly2 - 6:.0f}" font-size="21" font-weight="bold" '
+             f'fill="#d20f31">RESET</text>')
+    o.append(f'<text x="{lx + 24:.0f}" y="{ly2 + 14:.0f}" font-size="14" fill="#8a1225">'
+             f'tactile switch, ~6x6 mm</text>')
+    o.append(f'<text x="{lx + 24:.0f}" y="{ly2 + 32:.0f}" font-size="14" fill="#8a1225">'
+             f'double-tap = bootloader</text>')
+
+    def dim(x1v, y1v, x2v, y2v, label, dy=-7):
+        o.append(f'<line x1="{px(x1v):.1f}" y1="{py(y1v):.1f}" x2="{px(x2v):.1f}" '
+                 f'y2="{py(y2v):.1f}" stroke="#d20f31" stroke-width="1.4" '
+                 f'stroke-dasharray="4 3"/>')
+        o.append(f'<text x="{(px(x1v) + px(x2v)) / 2:.0f}" '
+                 f'y="{(py(y1v) + py(y2v)) / 2 + dy:.0f}" font-size="13" fill="#d20f31" '
+                 f'text-anchor="middle">{label}</text>')
+
+    dim(max(oled_pins), oled_y, rx, ry, "~7 mm")
+    dim(rx, ry, M(REFS["J2"][0]), REFS["J2"][1], "~8 mm", dy=4)
+    dim(rx, ry, edge_in, ry, "7.9 mm")
+
+    o.append(f'<line x1="{px(180):.1f}" y1="{py(112):.1f}" x2="{px(190):.1f}" '
+             f'y2="{py(112):.1f}" stroke="#333" stroke-width="3"/>')
+    o.append(f'<text x="{px(185):.0f}" y="{py(112) - 8:.0f}" font-size="13" '
+             f'text-anchor="middle" fill="#333">10 mm</text>')
+    o.append('<text x="12" y="22" font-size="16" font-weight="bold" fill="#222">'
+             'Sofle LEFT half - inner cluster, viewed from above (to scale)</text>')
+    o.append('<text x="12" y="40" font-size="12" fill="#777">geometry from SofleKeyboard '
+             'Sofle_RGB KiCad PCB (RSW1, J2, J3, U1, SW25), mirrored for the left half</text>')
+    o.append("</svg>")
+    return "\n".join(o) + "\n"
+
+
+def main() -> None:
+    try:
+        pcb = subprocess.run(["curl", "-sSL", "--max-time", "60", PCB_URL],
+                             capture_output=True, text=True, check=True).stdout
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        sys.exit(f"could not fetch the PCB: {e}")
+    if "kicad_pcb" not in pcb[:200]:
+        sys.exit("fetched file is not a KiCad PCB -- upstream path moved?")
+    verify(pcb)
+    OUT.write_text(render())
+    print(f"wrote {OUT}")
+
+
+if __name__ == "__main__":
+    main()

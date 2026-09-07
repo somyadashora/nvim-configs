@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="630" height="774" viewBox="0 0 630 774" font-family="DejaVu Sans, Helvetica, Arial, sans-serif">
+<rect width="630" height="774" fill="#fbfaf8"/>
+<rect x="0" y="0" width="445.2" height="774" fill="#1f5e3f" opacity="0.09"/>
+<line x1="445.2" y1="0" x2="445.2" y2="774" stroke="#1f5e3f" stroke-width="3"/>
+<text x="437" y="684" font-size="14" fill="#1f5e3f" text-anchor="end">inner edge - faces the right half</text>
+<rect x="36.6" y="99.0" width="126.0" height="126.0" fill="none" stroke="#bbb" stroke-width="1.5" stroke-dasharray="3 3"/>
+<rect x="36.6" y="270.9" width="126.0" height="126.0" fill="none" stroke="#bbb" stroke-width="1.5" stroke-dasharray="3 3"/>
+<rect x="36.6" y="441.9" width="126.0" height="126.0" fill="none" stroke="#bbb" stroke-width="1.5" stroke-dasharray="3 3"/>
+<rect x="36.6" y="612.9" width="126.0" height="126.0" fill="none" stroke="#bbb" stroke-width="1.5" stroke-dasharray="3 3"/>
+<text x="100" y="45" font-size="14" fill="#999" text-anchor="middle">key field</text>
+<rect x="194.1" y="72.0" width="160.2" height="288.0" fill="#2b3a55" stroke="#16203a" opacity="0.85" stroke-width="2"/>
+<text x="274" y="234" font-size="16" fill="#fff" text-anchor="middle" transform="rotate(-90 274 234)">nice!nano v2</text>
+<rect x="225.5" y="41.4" width="108.0" height="342.0" fill="#0a6ea8" stroke="#0a6ea8" stroke-width="2" stroke-dasharray="7 5" opacity="0.14"/>
+<text x="280" y="81" font-size="14" fill="#0a6ea8" text-anchor="middle">OLED module</text>
+<text x="280" y="112" font-size="11" fill="#0a6ea8" text-anchor="middle">(approx. 38 x 12 mm)</text>
+<circle cx="313.8" cy="383.4" r="8.1" fill="#c9a227" stroke="#7a5f0f"/>
+<circle cx="291.0" cy="383.4" r="8.1" fill="#c9a227" stroke="#7a5f0f"/>
+<circle cx="268.1" cy="383.4" r="8.1" fill="#c9a227" stroke="#7a5f0f"/>
+<circle cx="245.2" cy="383.4" r="8.1" fill="#c9a227" stroke="#7a5f0f"/>
+<text x="235" y="388" font-size="13" fill="#7a5f0f" text-anchor="end">4-pin OLED header</text>
+<rect x="281.4" y="451.8" width="119.7" height="69.3" fill="#555" stroke="#222" opacity="0.8" stroke-width="2"/>
+<text x="341" y="493" font-size="15" fill="#fff" text-anchor="middle">TRRS jack</text>
+<circle cx="284.1" cy="652.5" r="64.8" fill="none" stroke="#888" stroke-width="2" stroke-dasharray="5 4"/>
+<text x="284" y="658" font-size="14" fill="#777" text-anchor="middle">encoder</text>
+<rect x="347.1" y="382.5" width="54.0" height="54.0" rx="4" fill="#d20f31" stroke="#7d0a1d" stroke-width="2.5"/>
+<circle cx="374.1" cy="409.5" r="15.8" fill="#f4f1ec" stroke="#7d0a1d" stroke-width="2"/>
+<circle cx="374.1" cy="380.2" r="9.0" fill="#c9a227" stroke="#7a5f0f" stroke-width="1.5"/>
+<circle cx="374.1" cy="438.8" r="9.0" fill="#c9a227" stroke="#7a5f0f" stroke-width="1.5"/>
+<text x="374" y="366" font-size="12" fill="#7a5f0f" text-anchor="middle">legs 6.5 mm apart</text>
+<line x1="402.9" y1="409.5" x2="425" y2="392" stroke="#d20f31" stroke-width="2.5"/>
+<text x="431" y="386" font-size="21" font-weight="bold" fill="#d20f31">RESET</text>
+<text x="431" y="406" font-size="14" fill="#8a1225">tactile switch, ~6x6 mm</text>
+<text x="431" y="424" font-size="14" fill="#8a1225">double-tap = bootloader</text>
+<line x1="313.8" y1="383.4" x2="374.1" y2="409.5" stroke="#d20f31" stroke-width="1.4" stroke-dasharray="4 3"/>
+<text x="344" y="389" font-size="13" fill="#d20f31" text-anchor="middle">~7 mm</text>
+<line x1="374.1" y1="409.5" x2="392.1" y2="482.9" stroke="#d20f31" stroke-width="1.4" stroke-dasharray="4 3"/>
+<text x="383" y="450" font-size="13" fill="#d20f31" text-anchor="middle">~8 mm</text>
+<line x1="374.1" y1="409.5" x2="445.2" y2="409.5" stroke="#d20f31" stroke-width="1.4" stroke-dasharray="4 3"/>
+<text x="410" y="402" font-size="13" fill="#d20f31" text-anchor="middle">7.9 mm</text>
+<line x1="36.0" y1="720.0" x2="126.0" y2="720.0" stroke="#333" stroke-width="3"/>
+<text x="81" y="712" font-size="13" text-anchor="middle" fill="#333">10 mm</text>
+<text x="12" y="22" font-size="16" font-weight="bold" fill="#222">Sofle LEFT half - inner cluster, viewed from above (to scale)</text>
+<text x="12" y="40" font-size="12" fill="#777">geometry from SofleKeyboard Sofle_RGB KiCad PCB (RSW1, J2, J3, U1, SW25), mirrored for the left half</text>
+</svg>
