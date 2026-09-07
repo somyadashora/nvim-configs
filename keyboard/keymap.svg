@@ -186,8 +186,8 @@ text.label { stroke: none; }
 </g>
 <g transform="translate(868, 63)" class="key keypos-11">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">-</text>
-<text x="0" y="-24" class="key shifted">_</text>
+<text x="0" y="0" class="key tap">BSPC</text>
+<text x="0" y="-24" class="key shifted">DEL</text>
 </g>
 <g transform="translate(28, 119)" class="key keypos-12">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
@@ -235,8 +235,8 @@ text.label { stroke: none; }
 </g>
 <g transform="translate(868, 119)" class="key keypos-23">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">[</text>
-<text x="0" y="-24" class="key shifted">{</text>
+<text x="0" y="0" class="key tap">-</text>
+<text x="0" y="-24" class="key shifted">_</text>
 </g>
 <g transform="translate(28, 175)" class="key keypos-24">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
@@ -353,9 +353,7 @@ text.label { stroke: none; }
 </g>
 <g transform="translate(868, 231)" class="key keypos-49">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">]</text>
-<text x="0" y="24" class="key hold">RCTRL</text>
-<text x="0" y="-24" class="key shifted">}</text>
+<text x="0" y="0" class="key tap">RCTRL</text>
 </g>
 <g transform="translate(140, 259)" class="key keypos-50">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
@@ -412,6 +410,21 @@ text.label { stroke: none; }
 <g class="combo combopos-2">
 <rect rx="6" ry="6" x="658" y="130" width="28" height="26" class="combo"/>
 <text x="672" y="144" class="combo tap">ESC</text>
+</g>
+<g class="combo combopos-3">
+<rect rx="6" ry="6" x="826" y="162" width="28" height="26" class="combo"/>
+<text x="840" y="175" class="combo tap">[</text>
+<text x="840" y="164" class="combo shifted">{</text>
+</g>
+<g class="combo combopos-4">
+<rect rx="6" ry="6" x="826" y="218" width="28" height="26" class="combo"/>
+<text x="840" y="231" class="combo tap">]</text>
+<text x="840" y="220" class="combo shifted">}</text>
+</g>
+<g class="combo combopos-5">
+<rect rx="6" ry="6" x="770" y="148" width="28" height="26" class="combo"/>
+<text x="784" y="161" class="combo tap">=</text>
+<text x="784" y="150" class="combo shifted">+</text>
 </g>
 </g>
 </g>

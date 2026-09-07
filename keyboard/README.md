@@ -141,17 +141,31 @@ where a TKL has it, and TKL's own bottom-row order (Ctrl Win Alt … Alt Win
 Ctrl). Every key prints its shifted face in the diagrams, keycap style.
 
 **What could not fit.** Six columns per half cannot hold a TKL's right-side
-overflow: a TKL row has `[ ] \` after `P` and `=` after `-`, and there is
-nowhere to put them. All four move to **NAV**, contiguous, under the digits
-they already neighbour on a TKL:
+overflow: a TKL row has `[ ] \` after `P` and `=` after `-`. Rather than exile
+them to a held layer, they are **chords on base**, which frees the two real
+keys whose TKL position is worth most: **BSPC top-right**, and `-`/`_` right
+after `P`.
 
-| | NAV+8 | NAV+9 | NAV+0 | NAV+- |
-|---|---|---|---|---|
-| plain | `\` | `[` | `]` | `=` |
-| +Shift | `\|` | `{` | `}` | `+` |
+| chord | plain | +Shift |
+|---|---|---|
+| `;` + `'` | `[` | `{` |
+| `/` + bottom-right corner | `]` | `}` |
+| `L` + `;` | `=` | `+` |
+| `,` + `.` | `\` | `\|` |
 
-Shift needs no separate binding: `[` and `{` are the same HID key, so
-`NAV+Shift+9` is `{` for free.
+Shift needs no separate binding: `[` and `{` are the same HID key.
+
+**Three of those deliberately have no `require-prior-idle-ms`.** Every other
+combo here does, because `,.`, `jk` and `qw` are sequences you genuinely type
+and the guard is what stops a fast roll firing them. `;'`, `/]` and `l;` are
+the opposite — pairs that essentially never occur — so the guard buys nothing
+and costs a lot: it makes a combo *refuse to fire mid-burst*, which would break
+`]d]d]d` through this config's ~20 `[x`/`]x` nvim mappings, and `==`/`<=`/`!=`,
+which is most lines of RTL. The one real exposure is a single-letter variable
+`l` before a semicolon in `L`+`;`; that is the pair to change first if `=`
+starts appearing where it should not.
+
+`[ ] \ =` also stay on NAV+9 / NAV+0 / NAV+8 / NAV+- as a fallback.
 
 **The two keys between the halves are the encoder push-buttons**, not normal
 keys — awkward to hit deliberately, easy to hit while turning the knob. They
@@ -203,7 +217,7 @@ are on the right home row, one-handed; brightness is the row above.
 **Bootloader has a single-half escape hatch.** On NAV, pressing the two ends
 of the left half's number row together (`` ` `` + `5`) puts the **left** half
 into the bootloader; the same gesture on the right half's number row (`6` +
-`-`) does the right. Both use a 50ms window, so they are not hittable by
+BSPC, its two ends) does the right. Both use a 50ms window, so they are not hittable by
 accident.
 
 The left one is the one that matters: NAV is a left thumb and both keys are

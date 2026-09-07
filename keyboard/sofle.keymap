@@ -106,27 +106,17 @@
             hold-trigger-on-release;
         };
 
-        /* Symbol mod-tap, for the `]` in the bottom-right corner.
+        /* There is deliberately NO mod-tap on the bottom-right corner any
+         * more -- it is a plain &kp RCTRL. `]` was its tap half until the TKL
+         * keys came back to base and `]` moved to the `/`+corner combo. With
+         * no tap half there is nothing for a hold-tap to arbitrate, and
+         * dropping it takes the tapping-term latency off a modifier.
          *
-         * Deliberately NOT ZMK's stock &mt, whose default flavor is
-         * hold-preferred: a `]` you linger on a fraction too long would come
-         * out as Ctrl and swallow the next keystroke. tap-preferred resolves
-         * the hold ONLY past the tapping term, and another key pressed in the
-         * meantime never forces it -- so the symbol always wins, and Ctrl is
-         * something you ask for deliberately.
-         *
-         * quick-tap-ms is what keeps `]]` and `[[` repeating: tap-then-hold
-         * repeats the symbol instead of arming the mod. No cross-hand guard
-         * here on purpose -- unlike a home-row mod, this key carries no
-         * letter, so a same-hand chord is not a misfire, it is the point. */
-        smt: symbol_mod_tap {
-            compatible = "zmk,behavior-hold-tap";
-            #binding-cells = <2>;
-            flavor = "tap-preferred";
-            tapping-term-ms = <220>;
-            quick-tap-ms = <175>;
-            bindings = <&kp>, <&kp>;
-        };
+         * If a symbol ever wants to live there again, do NOT reach for stock
+         * &mt: its hold-preferred flavor turns a lingered tap into the
+         * modifier, so a leisurely `]` comes out as Ctrl and swallows the
+         * next keystroke. tap-preferred plus a quick-tap-ms (so `]]` repeats
+         * instead of arming the mod) is the shape that works. */
 
         /* Backspace, or Delete when a Shift is held. Delete is the only thing
          * regularly wanted in the other direction, and it is not worth its
@@ -262,6 +252,49 @@
             require-prior-idle-ms = <100>;
             layers = <BASE>;
         };
+
+        /* The TKL right-side symbols, as chords rather than keys.
+         *
+         * Six columns per half cannot hold `[ ] \ = ` on top of QWERTY, and
+         * the previous answer -- exile them to NAV, keep `[`/`]` as real base
+         * keys -- cost the top-right Backspace, which is the single strongest
+         * piece of TKL muscle memory there is. These chords buy that key back
+         * without pushing anything behind a held layer.
+         *
+         * NOTE THE MISSING require-prior-idle-ms. Every other combo here has
+         * it, because `,.`, `jk` and `qw` are sequences you really do type and
+         * the guard is what stops a fast roll firing them. These three are the
+         * opposite case: `;'`, `/]` and `l;` are pairs that essentially never
+         * occur, so the guard buys almost nothing -- and it would cost a great
+         * deal, because it makes a combo REFUSE to fire mid-burst. This nvim
+         * config has ~20 `[x`/`]x` mappings; walking a list with `]d]d]d`
+         * means firing the same combo three times in a second, and with the
+         * guard on, every repeat after the first would silently do nothing.
+         * Same for `==`, `<=` and `!=`, which is most lines of RTL.
+         *
+         * The one real exposure is `l;` in combo_equal: a single-letter
+         * variable `l` followed by a semicolon. Rare enough to accept, and the
+         * pair to change first if `=` ever appears where it should not.
+         *
+         * `[`/`]` also stay on NAV+9 / NAV+0 as a fallback. */
+        combo_lbkt {
+            bindings = <&kp LBKT>;      /* [ and, with Shift, { */
+            key-positions = <34 35>;    /* ; + ' */
+            timeout-ms = <45>;
+            layers = <BASE>;
+        };
+        combo_rbkt {
+            bindings = <&kp RBKT>;      /* ] and, with Shift, } */
+            key-positions = <48 49>;    /* / + the RCTRL corner */
+            timeout-ms = <45>;
+            layers = <BASE>;
+        };
+        combo_equal {
+            bindings = <&kp EQUAL>;     /* = and, with Shift, + */
+            key-positions = <33 34>;    /* L + ; */
+            timeout-ms = <45>;
+            layers = <BASE>;
+        };
     };
 
     /* NAV + MEDIA held together = ADJ. Nothing on ADJ is a typing key, so it
@@ -305,9 +338,11 @@
 // Shift is still wanted: require-prior-idle-ms means the home-row one refuses
 // to fire mid-burst, so capitals typed at speed need a plain key.
 //
-// The right corner doubles up: tap `]`, hold RCTRL (see &smt). A right Ctrl
-// is only needed for Ctrl + a left-hand key while the left hand is busy, so
-// it is fine as the hold half of a symbol key.
+// The right corner is a plain RCTRL. It carried `]` as a mod-tap's tap half
+// until the TKL keys came back to base and `]` became the `/`+corner combo;
+// with no tap half there is nothing to arbitrate, and dropping the hold-tap
+// takes its tapping-term latency off a modifier. A right Ctrl is only ever
+// needed for Ctrl + a left-hand key while the left hand is already busy.
 //
 // The two inner keys by the encoders are the ENCODER PUSH-BUTTONS, not normal
 // keys: awkward to hit deliberately, easy to hit while turning the knob. They
@@ -319,18 +354,18 @@
 // leader and the most-pressed key on the board; Enter is not, and the two
 // were swapped so the busier one sits under the stronger thumb.
 // ---------------------------------------------------------------------------------------------------------------
-// |  ` ~ | 1 ! | 2 @ | 3 # | 4 $ | 5 % |               | 6 ^ | 7 & | 8 * | 9 ( | 0 ) |  - _  |
-// |  ESC |  Q  |  W  |  E  |  R  |  T  |               |  Y  |  U  |  I  |  O  |  P  |  [ {  |
+// |  ` ~ | 1 ! | 2 @ | 3 # | 4 $ | 5 % |               | 6 ^ | 7 & | 8 * | 9 ( | 0 ) | BSPC  |
+// |  ESC |  Q  |  W  |  E  |  R  |  T  |               |  Y  |  U  |  I  |  O  |  P  |  - _  |
 // |  TAB |  A  |  S  |  D  |  F  |  G  |               |  H  |  J  |  K  |  L  | ; : |  ' "  |
-// | CTRL |  Z  |  X  |  C  |  V  |  B  | MUTE| |PLAY |  N  |  M  | , < | . > | / ? | ] } / CTRL |
+// | CTRL |  Z  |  X  |  C  |  V  |  B  | MUTE| |PLAY |  N  |  M  | , < | . > | / ? | CTRL |
 //              | SHFT| GUI | ALT | NAV | SPC | | ENT  |MEDIA|BSPC | GUI | SHFT|
 //                      home row: GUI ALT CTL SFT           SFT CTL ALT GUI
 //                      thumb BSPC: Shift+it is Delete
             bindings = <
-&kp GRAVE &kp N1       &kp N2       &kp N3        &kp N4        &kp N5                              &kp N6    &kp N7        &kp N8        &kp N9       &kp N0          &kp MINUS
-&kp ESC   &kp Q        &kp W        &kp E         &kp R         &kp T                               &kp Y     &kp U         &kp I         &kp O        &kp P           &kp LBKT
+&kp GRAVE &kp N1       &kp N2       &kp N3        &kp N4        &kp N5                              &kp N6    &kp N7        &kp N8        &kp N9       &kp N0          &bspc_del
+&kp ESC   &kp Q        &kp W        &kp E         &kp R         &kp T                               &kp Y     &kp U         &kp I         &kp O        &kp P           &kp MINUS
 &kp TAB   &hml LGUI A  &hml LALT S  &hml LCTRL D  &hml LSHFT F  &kp G                               &kp H     &hmr RSHFT J  &hmr RCTRL K  &hmr RALT L  &hmr RGUI SEMI  &kp SQT
-&kp LCTRL &kp Z        &kp X        &kp C         &kp V         &kp B      &kp C_MUTE   &kp C_PP    &kp N     &kp M         &kp COMMA     &kp DOT      &kp FSLH        &smt RCTRL RBKT
+&kp LCTRL &kp Z        &kp X        &kp C         &kp V         &kp B      &kp C_MUTE   &kp C_PP    &kp N     &kp M         &kp COMMA     &kp DOT      &kp FSLH        &kp RCTRL
                        &kp LSHFT    &kp LGUI      &kp LALT      &nav_rgb   &kp SPACE    &kp RET     &media_rgb &bspc_del     &kp RGUI      &kp RSHFT
             >;
             /* left knob: volume     right knob: page scroll */

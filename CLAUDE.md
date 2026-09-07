@@ -910,16 +910,20 @@ PgUp sits directly above PgDn), NAV's arrows are the TKL **inverted-T** rather
 than hjkl (base-layer hjkl are already hjkl for vim; these arrows are for
 browsers and dialogs, where the TKL shape is the muscle memory), and MEDIA is
 F1-F12 straight across the number row. **Six columns per half cannot hold a
-TKL's right-side overflow** (`[ ] \` after P, `=` after `-`), so it is split by
-how often each is actually typed rather than exiled wholesale: `[` and `]` sit
-on **base** (`[` in its TKL position right after P, taking the old Backspace
-slot; `]` on the bottom-right corner) because this repo's nvim config has
-twenty `[x`/`]x` mappings and Shift on top gives the `{`/`}` paragraph motions
-— a navigation prefix behind a held layer is the one thing you cannot afford.
-`\` and `=` stay on NAV under the digits they neighbour on a TKL (NAV+8 `\`,
-NAV+- `=`), with Shift composing for free (`[` and `{` are one HID key, so
-NAV+Shift+9 is `{`); `\` also has a `,`+`.` combo. NAV keeps `[`/`]` too, as a
-free fallback. Don't "fix" any of this by shuffling QWERTY. The two keys between the halves are
+TKL's right-side overflow** (`[ ] \` after P, `=` after `-`), so they are
+**combos on base** rather than exiles to a held layer. That buys back the two
+TKL keys worth most in muscle memory: **BSPC in the top-right corner** (where a
+TKL has it) and `-`/`_` right after P — `_` stays a single keypress, which
+matters when every SystemVerilog identifier is snake_case. The combos are
+`;`+`'` → `[`, `/`+corner → `]`, `L`+`;` → `=`, and `,`+`.` → `\`; Shift
+composes for free (`[` and `{` are one HID key). **None of the first three
+carries `require-prior-idle-ms`**, and that omission is load-bearing: the guard
+makes a combo refuse mid-burst, which would break `]d]d]d` through this repo's
+~20 `[x`/`]x` nvim mappings, and `==`/`<=`/`!=`, which is most lines of RTL.
+It is safe to drop only because `;'`, `/]` and `l;` are pairs you never
+actually type — unlike `,.`/`jk`/`qw`, which keep theirs. The residual risk is
+a single-letter variable `l` before a semicolon; that is the pair to change
+first. NAV keeps `[ ] \ =` on 9/0/8/- as a fallback. Don't "fix" any of this by shuffling QWERTY. The two keys between the halves are
 the **encoder push-buttons**, not normal keys: easy to hit while turning the
 knob, so they only ever get things harmless to fire by accident (mute,
 play/pause, Win+L) — never a typing key.
@@ -947,11 +951,14 @@ prefix above. A guard-free `&kp LCTRL` in the corner is the fix; right-hand
 Ctrl chords were always fine via the left home-row one. Shift moves down a row
 onto the **outer thumb keys**, which is also where a plain Shift is still
 wanted — `require-prior-idle-ms` means the home-row one refuses to fire
-mid-burst, so capitals typed at speed need a real key. The right corner doubles
-up as `&smt RCTRL RBKT` (tap `]`, hold Ctrl); `&smt` is deliberately **not**
-stock `&mt`, whose `hold-preferred` default would turn a lingered `]` into
-Ctrl. Backspace moves to the right thumb as `&bspc_del`, a mod-morph giving
-Delete under Shift. **Space and Enter are swapped** from TKL order — Space is
+mid-burst, so capitals typed at speed need a real key. The right corner is a
+plain `&kp RCTRL` — it carried `]` as a mod-tap's tap half until `]` became the
+`/`+corner combo, and with no tap half there is nothing to arbitrate and no
+tapping-term latency on a modifier. (If a symbol ever returns there, do **not**
+use stock `&mt`: its `hold-preferred` default turns a lingered tap into the
+modifier. The keymap records the working shape.) Backspace is `&bspc_del`, a
+mod-morph giving Delete under Shift, on the right thumb **and** in the TKL
+top-right corner. **Space and Enter are swapped** from TKL order — Space is
 the nvim leader and the most-pressed key, so it takes the stronger left inner
 thumb. Both Shift keys pressed together are a **`&caps_word` combo**: the
 SystemVerilog key, since `UVM_INFO`/`SCREAMING_PARAMS` are most of what gets
@@ -962,7 +969,7 @@ hardware combo**, not an nvim mapping, so it also escapes in nvim-bash vi mode
 and in a bare `vi` on a box you don't control. Encoders are per-layer.
 `&studio_unlock` is on ADJ+`U`. **Bootloader has a single-half escape hatch**: on NAV, the two ends of the
 left half's number row together (`` ` ``+`5`) bootloader the LEFT half, and
-the right half's number row (`6`+`-`) does the right. The left one is
+the right half's number row (`6`+BSPC, the two ends) does the right. The left one is
 load-bearing — NAV is a left thumb and both keys are left-half, so it is local
 to the central and works with the right half flat, unpaired, or on different
 firmware, which is exactly when you need it and exactly when ADJ (NAV+MEDIA,
