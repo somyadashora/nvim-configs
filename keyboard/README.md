@@ -111,6 +111,10 @@ Per-key SK6812MINI-E LEDs, no underglow strip. 1000mAh per half.
 - **Halves won't pair, or Studio state is stuck** — flash `settings_reset.uf2`
   to the affected half, let it boot once, then flash the real firmware back.
   This is also the nuclear option for the Studio-overrides-your-keymap trap.
+- **OLEDs are dark** — almost certainly the external power rail, not the
+  display config. Press **ADJ + EPTOG** once; the rail's state is saved to
+  flash and survives reflashing, so no firmware will fix it for you. See
+  [Displays](#displays).
 - **Encoders do nothing** — `CONFIG_EC11` in `sofle.conf`. The stock shield
   ships it commented out.
 - **Build fails right after a ZMK bump** — the pin in `west.yml` and the `uses:`
@@ -282,9 +286,76 @@ you decide the lights are a desk luxury rather than a portable one, uncomment
 `CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_USB=y` — LEDs only while plugged in, and by
 far the biggest single win.
 
-Note that toggling the LEDs off also cuts external power, which **takes the
-OLED with it**. That is the right trade for battery; set
-`CONFIG_ZMK_RGB_UNDERGLOW_EXT_POWER=n` if you would rather keep the display.
+`CONFIG_ZMK_RGB_UNDERGLOW_EXT_POWER` is **`n`**, which is not the default and
+is what keeps the OLEDs alive -- see [Displays](#displays) below. The cost is
+that the LED rail is never cut, so the strip's quiescent draw is always
+flowing. That is the single biggest battery item on this board now, and it is
+the price of having a display at all.
+
+## Displays
+
+Both halves have a 128x32 SSD1306. `CONFIG_ZMK_DISPLAY=y` in `sofle.conf`
+turns them on and the layer names come from `display-name` on each layer in
+`sofle.keymap`.
+
+**What each half is allowed to show is decided by ZMK, not by taste.** Every
+interesting widget is gated on being the *central* side of the split
+(`app/src/display/widgets/Kconfig`: `depends on ZMK_SPLIT_ROLE_CENTRAL`),
+because a peripheral never runs the keymap and therefore does not know the
+layer, the active output, or the WPM:
+
+| | LEFT (central) | RIGHT (peripheral) |
+|---|---|---|
+| layer name | yes | **no** |
+| battery | yes | yes |
+| output USB/BLE | yes | **no** |
+| WPM | yes | **no** |
+| split connection icon | no | yes |
+
+So the right half has essentially nothing to say, which is why a logo is the
+sensible thing to put there. That needs a *custom status screen*, which means
+C code, which means this repository has to become a Zephyr module -- and ZMK's
+reusable workflow only looks for `zephyr/module.yml` at the **repository
+root**, not at `config_path`. That is a top-level `zephyr/` directory and a
+top-level `CMakeLists.txt` in a dotfiles repo, for the keyboard's benefit.
+Not done yet; decide before doing it.
+
+Layer names are capped at **9 characters**. `layer_status.c` formats into a
+`char text[14]` after a 3-byte LVGL keyboard glyph and a space, so longer
+names are silently truncated by `snprintf`.
+
+### The rail, and why the OLEDs were dark
+
+The nice!nano's external power rail (P0.13) feeds the per-key LEDs **and** the
+OLED. There is one rail; you cannot power one without the other.
+
+With the stock `CONFIG_ZMK_RGB_UNDERGLOW_EXT_POWER=y`, the underglow driver
+toggles that rail along with the LEDs, and combined with
+`CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_IDLE=y` that is not a trade-off, it is a
+deterministic failure:
+
+1. Boot -- `ext_power_generic_init` enables the rail. OLEDs light.
+2. 30 s idle (`CONFIG_ZMK_IDLE_TIMEOUT` default) -- the activity event calls
+   `zmk_rgb_underglow_off()`, which calls `ext_power_disable()`. OLEDs dark.
+3. Next keypress -- the wake path restores the LED state from *before* idling.
+   That state is off, because `ON_START=n`, so it calls `off()` **again**. The
+   rail is never re-enabled.
+
+Net effect: the OLEDs die 30 seconds after every boot and never return. ZMK
+separately has a standing bug where a display does not recover from an
+ext-power cutoff at all ([zmk#674]), which is why its docs still call displays
+a proof of concept.
+
+Hence `CONFIG_ZMK_RGB_UNDERGLOW_EXT_POWER=n`. `AUTO_OFF_IDLE` still works --
+it just blanks the pixels instead of cutting the rail.
+
+**The rail's state is saved to flash and survives a reflash.** ZMK's docs are
+explicit about it. So a board that ever cut the rail comes up dark no matter
+what you flash, and the fix is not another firmware: press **ADJ + EPTOG**
+(`&ext_power EP_TOG`, next to `OUT`) once. Nothing turns the rail off on its
+own any more, so it is a one-time repair.
+
+[zmk#674]: https://github.com/zmkfirmware/zmk/issues/674
 
 ## Printable diagrams
 

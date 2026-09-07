@@ -29,6 +29,8 @@ parse_config:
     '&nav_rgb': 'NAV'
     '&media_rgb': 'MEDIA'
     '&caps_word': 'CAPSWRD'
+    # Same 7-char cell problem: the raw text is '&ext_power EP_TOG'.
+    '&ext_power EP_TOG': 'EPTOG'
     # A mod-morph has no shifted face keymap-drawer can infer, so spell the
     # pair out the way the keycaps do.
     '&bspc_del': {t: 'BSPC', s: 'DEL'}

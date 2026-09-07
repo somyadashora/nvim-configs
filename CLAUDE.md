@@ -999,8 +999,15 @@ conditional layer has no key to hang a macro on). Controls live on MEDIA's left
 hand. **Battery is the real constraint**: 29 LEDs/half at full white is ~1.7A
 against a 1000mAh cell, so the LEDs start OFF, cap at 50% brightness, and die
 on idle; `CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_USB=y` (commented) is the
-LEDs-only-on-USB switch. Toggling LEDs off also cuts external power and takes
-the OLED with it.
+LEDs-only-on-USB switch. The LED rail and the OLED are the SAME rail (P0.13),
+so `CONFIG_ZMK_RGB_UNDERGLOW_EXT_POWER` is **`n`** — at the stock `y` the
+underglow driver cuts that rail on idle and the wake path never restores it
+(it re-applies the pre-idle LED state, which is off), so the OLEDs die 30s
+after every boot and stay dead. `n` costs the strip's quiescent draw forever,
+which is now the biggest battery item; there is no third option, since one
+rail feeds both. The rail's state persists across reflashes, so a board that
+already cut it needs one press of **ADJ+EPTOG** (`&ext_power EP_TOG`), not
+another firmware.
 
 **Printable diagrams** — `keymap.svg` (print this), `keymap.png`, and
 `keymap.txt` (`sofle-cs` prints it) are all **generated** from `sofle.keymap` by
