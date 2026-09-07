@@ -1,0 +1,42 @@
+# Restores everything ZMK's BUILT_IN status screen quietly provided.
+#
+# This is the trap in switching to a custom screen, and it is silent: all of
+# the below hang off ZMK_DISPLAY_STATUS_SCREEN_BUILT_IN in
+# zmk/app/src/display/Kconfig, so choosing CUSTOM instead drops the four
+# status widgets, the mono theme, the fonts and the LVGL heap size all at
+# once. The screen then builds fine and renders nothing useful.
+#
+# Adding properties to an existing symbol is the same move ZMK's own nice_view
+# shield makes on this very symbol, so it is a supported pattern, not a trick.
+
+if ZMK_DISPLAY
+
+config ZMK_DISPLAY_STATUS_SCREEN_CUSTOM
+    imply ZMK_WIDGET_LAYER_STATUS
+    imply ZMK_WIDGET_BATTERY_STATUS
+    imply ZMK_WIDGET_OUTPUT_STATUS
+    imply ZMK_WIDGET_PERIPHERAL_STATUS
+    imply LV_USE_THEME_MONO if LV_Z_BITS_PER_PIXEL=1
+    select LV_USE_LABEL
+    select LV_USE_IMAGE
+
+if ZMK_DISPLAY_STATUS_SCREEN_CUSTOM
+
+config LV_FONT_MONTSERRAT_16
+    default y
+
+config LV_FONT_MONTSERRAT_12
+    default y
+
+choice LV_FONT_DEFAULT
+    default LV_FONT_DEFAULT_MONTSERRAT_16
+endchoice
+
+# ZMK sets 4096 for its own screen. nice_view, the one custom screen in the
+# tree, uses 8192 -- an image widget needs more than a handful of labels.
+config LV_Z_MEM_POOL_SIZE
+    default 8192
+
+endif # ZMK_DISPLAY_STATUS_SCREEN_CUSTOM
+
+endif # ZMK_DISPLAY

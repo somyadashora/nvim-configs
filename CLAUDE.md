@@ -1009,6 +1009,24 @@ rail feeds both. The rail's state persists across reflashes, so a board that
 already cut it needs one press of **ADJ+EPTOG** (`&ext_power EP_TOG`), not
 another firmware.
 
+**OLED displays** — both halves run a 128x32 SSD1306. What each half may show
+is ZMK's decision, not a preference: every interesting widget is
+`depends on ZMK_SPLIT_ROLE_CENTRAL`, since a peripheral never runs the keymap.
+So the LEFT half gets layer name / battery / output / WPM and the RIGHT half
+is allowed only a battery readout and a connection icon — which is why it gets
+the SD wordmark instead. Layer names come from `display-name` per layer and are
+capped at **9 chars** (`layer_status.c` formats into a `char text[14]` after a
+3-byte glyph and a space). The custom screen lives in `keyboard/display/` and
+is compiled because `keyboard/` is a **Zephyr module** (`zephyr/module.yml`) —
+deliberately there and not at the repo root, which is the only place ZMK's
+workflow auto-detects one; it works because `self.path: keyboard` already makes
+this the manifest repo, and the manifest repo is a west project. `keyboard/Kconfig`
+is load-bearing: choosing `STATUS_SCREEN_CUSTOM` silently drops the four status
+widgets, the mono theme, the fonts and the LVGL heap size (all properties of
+`STATUS_SCREEN_BUILT_IN`), and the build still succeeds while rendering nothing.
+The logo is a generated LVGL I1 bitmap (`scripts/gen-logo`), format copied from
+ZMK's nice_view art since each LVGL major version spells it differently.
+
 **Printable diagrams** — `keymap.svg` (print this), `keymap.png`, and
 `keymap.txt` (`sofle-cs` prints it) are all **generated** from `sofle.keymap` by
 `scripts/gen-keymap-art`, so they cannot drift from the firmware. `keymap.txt`

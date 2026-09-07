@@ -1,0 +1,21 @@
+# Makes this directory a Zephyr module, which is the only way to get C source
+# compiled into a ZMK build -- and C source is the only way to have a custom
+# status screen, which is the only way to put a logo on the right OLED.
+#
+# It lives HERE and not at the repository root on purpose. ZMK's reusable
+# workflow auto-detects a module only at the repo root (it tests
+# `[ -e zephyr/module.yml ]` against GITHUB_WORKSPACE), and a dotfiles repo
+# growing a top-level zephyr/ + CMakeLists.txt for the keyboard's benefit is
+# not a trade worth making. This works instead because `self.path: keyboard`
+# in west.yml already makes this directory the manifest repository, and the
+# manifest repo is a west project like any other, so Zephyr's module scan
+# finds it without the workflow's help.
+#
+# If that ever stops being true the symptom is unmistakable: the link fails on
+# an undefined `zmk_display_status_screen`, because ZMK compiles no status
+# screen of its own once STATUS_SCREEN_CUSTOM is set. The fallback is a
+# `cmake-args: -DZMK_EXTRA_MODULES=...` entry per build.yaml target.
+name: sd-sofle
+build:
+  cmake: .
+  kconfig: Kconfig
